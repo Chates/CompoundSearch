@@ -11,18 +11,9 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Chates
  */
 @XmlRootElement
-public class SimilarityRequest {
+public class AddRequestXML {
     
-    private String method;
     private String molfile;
-
-    public String getMethod() {
-	return method;
-    }
-
-    public void setMethod(String method) {
-	this.method = method;
-    }
 
     public String getMolfile() {
 	return molfile;

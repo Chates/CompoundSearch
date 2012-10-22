@@ -33,7 +33,7 @@ import javax.ws.rs.core.Response;
 public class ListResource {
 
     @PersistenceContext(unitName = "com.webtoad_Diplomka_maven_war_1.0PU")
-    protected EntityManager em;
+    private EntityManager em;
 
     private TypedQuery<Compound> getCompoundTQ() {
 	CriteriaBuilder crtiteriaBuilder = em.getCriteriaBuilder();

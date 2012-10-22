@@ -50,7 +50,7 @@ import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 public class FileResource {
 
     @PersistenceContext(unitName = "com.webtoad_Diplomka_maven_war_1.0PU")
-    protected EntityManager em;
+    private EntityManager em;
 
     @POST
     @Path("/download/")

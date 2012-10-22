@@ -4,10 +4,14 @@
  */
 package com.webtoad.diplomka.resources;
 
-import com.webtoad.diplomka.SimilarityRequest;
+import com.webtoad.diplomka.SimilarityRequestXML;
 import com.webtoad.diplomka.entities.Compound;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -16,6 +20,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBElement;
@@ -34,43 +39,54 @@ import org.openscience.cdk.isomorphism.UniversalIsomorphismTester;
 public class SimilarityResource {
 
     @PersistenceContext(unitName = "com.webtoad_Diplomka_maven_war_1.0PU")
-    protected EntityManager em;
+    private EntityManager em;
     @EJB
-    protected IdResource idResource;
+    private ListResource listResource;
 
     @POST
     @Path("/test/")
-    public Response testSimilarity(JAXBElement<SimilarityRequest> sr) {
+    public List<Compound> testSimilarity(JAXBElement<SimilarityRequestXML> sr) throws Exception {
+
+	List<Compound> similarityResults = new ArrayList();
 
 	// Obtain test compound from DB
-	Compound c = idResource.getCompoundById(new Long(11420));
+	List<Compound> sourceCompounds = listResource.getCompounds();
 
-	Boolean isIsomorph;
-	
 	try {
-	    // Create Molecule from DB molfile using CDK library
-	    InputStream is = new ByteArrayInputStream(c.getMolfile().getBytes());
-	    MDLV2000Reader reader = new MDLV2000Reader(is);
-	    AtomContainer acResource = reader.read(new AtomContainer());
-	    is.close();
-	    reader.close();
-	    
 	    // Create molecule from request
-	    is = new ByteArrayInputStream(sr.getValue().getMolfile().getBytes());
-	    reader = new MDLV2000Reader(is);
-	    AtomContainer acRequest = reader.read(new AtomContainer());
+	    InputStream is = new ByteArrayInputStream(sr.getValue().getMolfile().getBytes());
+	    MDLV2000Reader reader = new MDLV2000Reader(is);
+	    AtomContainer requestMolecule = reader.read(new AtomContainer());
 	    is.close();
 	    reader.close();
-	    
-	    // Try to compare
-	    isIsomorph = UniversalIsomorphismTester.isIsomorph(acResource, acRequest); //Exact similarity
-	    
-	    
+
+	    Boolean isSimilar;
+
+	    // Loop over compounds
+	    for (Compound c : sourceCompounds) {
+
+		// Create Molecule from DB molfile using CDK library
+		is = new ByteArrayInputStream(c.getMolfile().getBytes());
+		reader = new MDLV2000Reader(is);
+		AtomContainer resourceMolecule = reader.read(new AtomContainer());
+		is.close();
+		reader.close();
+
+		// Try to compare
+		isSimilar = UniversalIsomorphismTester.isIsomorph(requestMolecule, resourceMolecule); //Exact similarity
+		if (isSimilar) {
+		    similarityResults.add(c);
+		}
+	    }
 	} catch (Exception e) {
-	    return Response.serverError().build();
+	    throw e;
+	    //throw new WebApplicationException(Response.serverError().build());
 	}
 
+	if (similarityResults.isEmpty()) {
+	    throw new WebApplicationException(Response.status(404).entity("None compound is similar.").build());
+	}
 
-	return Response.ok().build();
+	return similarityResults;
     }
 }
