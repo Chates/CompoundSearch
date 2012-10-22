@@ -9,8 +9,6 @@ import com.webtoad.diplomka.entities.Compound;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -47,7 +45,7 @@ public class SimilarityResource {
     @Path("/test/")
     public List<Compound> testSimilarity(JAXBElement<SimilarityRequestXML> sr) throws Exception {
 
-	List<Compound> similarityResults = new ArrayList();
+	List<Compound> similarityResults = new ArrayList<Compound>();
 
 	// Obtain test compound from DB
 	List<Compound> sourceCompounds = listResource.getCompounds();

@@ -72,7 +72,7 @@ public class AddResource {
 	    throw new WebApplicationException(Response.serverError().build());
 	}
 	
-	URI compoundUri = uriInfo.getAbsolutePathBuilder().path("/id/" + compoundToAdd.getId().toString()).build();
+	URI compoundUri = uriInfo.getBaseUriBuilder().path("/id/" + compoundToAdd.getId().toString()).build();
 	return Response.created(compoundUri).build();
 
     }
