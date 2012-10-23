@@ -25,6 +25,8 @@ import javax.xml.bind.JAXBElement;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.isomorphism.UniversalIsomorphismTester;
+import org.openscience.cdk.tools.CDKHydrogenAdder;
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 /**
  *
@@ -71,7 +73,21 @@ public class SimilarityResource {
 		reader.close();
 
 		// Try to compare
-		isSimilar = UniversalIsomorphismTester.isIsomorph(requestMolecule, resourceMolecule); //Exact similarity
+		//isSimilar = UniversalIsomorphismTester.isIsomorph(requestMolecule, resourceMolecule); //Exact similarity
+		
+		// Using substructure we need to add implicit hydrogens to resource and to request
+//		AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(resourceMolecule); // perceive atom types
+//		CDKHydrogenAdder adder = CDKHydrogenAdder.getInstance(resourceMolecule.getBuilder());
+//		adder.addImplicitHydrogens(resourceMolecule); // add implicit hydrogens
+//		AtomContainerManipulator.convertImplicitToExplicitHydrogens(resourceMolecule);
+//		// request molecule
+//		AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(requestMolecule); // perceive atom types
+//		adder = CDKHydrogenAdder.getInstance(requestMolecule.getBuilder());
+//		adder.addImplicitHydrogens(requestMolecule); // add implicit hydrogens
+//		AtomContainerManipulator.convertImplicitToExplicitHydrogens(requestMolecule);
+		
+		isSimilar = UniversalIsomorphismTester.isSubgraph(resourceMolecule, requestMolecule);
+		
 		if (isSimilar) {
 		    similarityResults.add(c);
 		}
