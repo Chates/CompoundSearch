@@ -1,5 +1,8 @@
 package com.webtoad.diplomka.entities;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -7,6 +10,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.openscience.cdk.AtomContainer;
+import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.io.MDLV2000Reader;
 
 /**
  *
@@ -14,7 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @XmlRootElement
-@Table(name = "Compounds")
+@Table(name = "compound")
 public class Compound {
 
     @Id
@@ -24,7 +30,7 @@ public class Compound {
     @Column(name = "molecular_formula", length = 255, nullable = false)
     private String molecularFormula;
     @Column(name = "smiles", length = 255, nullable = false)
-    private String smiles;   
+    private String smiles;
     @Column(name = "molfile", length = 10000, nullable = false)
     private String molfile;
 
@@ -59,7 +65,14 @@ public class Compound {
     public void setMolfile(String molfile) {
 	this.molfile = molfile;
     }
+    
+    public AtomContainer getAtomContainer() throws CDKException, IOException {
+	InputStream is = new ByteArrayInputStream(this.molfile.getBytes());
+	MDLV2000Reader reader = new MDLV2000Reader(is);
+	AtomContainer molecule = reader.read(new AtomContainer());
+	is.close();
+	reader.close();
 
-
-       
+	return molecule;
+    }
 }

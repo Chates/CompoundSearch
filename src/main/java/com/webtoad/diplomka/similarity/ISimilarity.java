@@ -4,10 +4,21 @@
  */
 package com.webtoad.diplomka.similarity;
 
+import com.webtoad.diplomka.CompoundSearchException;
+import com.webtoad.diplomka.entities.Compound;
+import java.util.List;
+
 /**
  *
  * @author Chates
  */
-public class ISimilarity {
+public interface ISimilarity {
+    
+    public void screen();
+
+    public List<Compound> findAllSimilar();
+    
+    public Boolean isSimilar(Compound c) throws CompoundSearchException ;
+    
     
 }

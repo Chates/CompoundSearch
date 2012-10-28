@@ -6,6 +6,7 @@ package com.webtoad.diplomka.resources;
 
 import com.webtoad.diplomka.SimilarityRequestXML;
 import com.webtoad.diplomka.entities.Compound;
+import com.webtoad.diplomka.entities.CompoundDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -22,9 +24,14 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBElement;
+import org.eclipse.persistence.exceptions.DatabaseException;
 import org.openscience.cdk.AtomContainer;
+import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.isomorphism.UniversalIsomorphismTester;
+import org.openscience.cdk.qsar.DescriptorValue;
+import org.openscience.cdk.qsar.descriptors.molecular.AtomCountDescriptor;
+import org.openscience.cdk.qsar.result.IDescriptorResult;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
@@ -45,7 +52,7 @@ public class SimilarityResource {
 
     @POST
     @Path("/test/")
-    public List<Compound> testSimilarity(JAXBElement<SimilarityRequestXML> sr) throws Exception {
+    public List<Compound> testSimilarity(JAXBElement<SimilarityRequestXML> sr) throws Exception  {
 
 	List<Compound> similarityResults = new ArrayList<Compound>();
 
@@ -72,9 +79,47 @@ public class SimilarityResource {
 		is.close();
 		reader.close();
 
+
+		// Descriptor testing
+		AtomCountDescriptor acd = new AtomCountDescriptor();
+//		String[] descriptorNames = acd.getDescriptorNames(); // Descriptor Names
+//		IDescriptorResult descriptorResultType = acd.getDescriptorResultType(); // Descriptor Result Type
+//		String[] parameterNames = acd.getParameterNames(); // Parameter names
+//		
+//		Object[] parameterTypes = new Object[parameterNames.length]; // Parameter types
+//		Integer i = 0;
+//		for (String pn : parameterNames) {
+//		    parameterTypes[i] = acd.getParameterType(pn);
+//		}
+
+
+
+
+//		Object[] params = new Object[acd.getParameterNames().length];
+//		params[0] = "C";
+//		acd.setParameters(params);
+
+		DescriptorValue dValue = acd.calculate(resourceMolecule);
+		IDescriptorResult idR = dValue.getValue();
+		try {
+		    CompoundDescriptor cd = new CompoundDescriptor();
+		    cd.setAtomCount(Integer.parseInt(idR.toString()));
+		    cd.setCompound(c);
+		    em.persist(cd);
+
+		    em.flush();
+		} catch (PersistenceException e) { // Is it in the database already?
+		    
+		    
+		    Throwable test = e.getCause();
+
+		    System.out.println("");
+		}
+//		
+//		String test = idR.toString();
 		// Try to compare
 		//isSimilar = UniversalIsomorphismTester.isIsomorph(requestMolecule, resourceMolecule); //Exact similarity
-		
+
 		// Using substructure we need to add implicit hydrogens to resource and to request
 //		AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(resourceMolecule); // perceive atom types
 //		CDKHydrogenAdder adder = CDKHydrogenAdder.getInstance(resourceMolecule.getBuilder());
@@ -85,16 +130,15 @@ public class SimilarityResource {
 //		adder = CDKHydrogenAdder.getInstance(requestMolecule.getBuilder());
 //		adder.addImplicitHydrogens(requestMolecule); // add implicit hydrogens
 //		AtomContainerManipulator.convertImplicitToExplicitHydrogens(requestMolecule);
-		
+
 		isSimilar = UniversalIsomorphismTester.isSubgraph(resourceMolecule, requestMolecule);
-		
+
 		if (isSimilar) {
 		    similarityResults.add(c);
 		}
 	    }
-	} catch (Exception e) {
-	    throw e;
-	    //throw new WebApplicationException(Response.serverError().build());
+	} catch (CDKException e) {
+	    throw new WebApplicationException(Response.serverError().build());
 	}
 
 	if (similarityResults.isEmpty()) {
