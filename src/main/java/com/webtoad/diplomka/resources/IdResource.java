@@ -12,7 +12,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 /**
  * REST resource returning a compound from database searched by given ID.
@@ -50,9 +49,8 @@ public class IdResource {
 	Compound c = em.find(Compound.class, id);
 
 	if (c == null) {
-	    String message = "Compound with a given ID was not found.";
-	    Response r = Response.status(404).header("Compound-search-error", message).build();
-	    throw new WebApplicationException(r);
+	    CompoundResponse crf = new CompoundResponse("Compound with a given ID was not found.", 404);
+	    throw new WebApplicationException(crf.buildResponse());
 	}
 
 	// ArrayList because of data consistency in response mapped to JSON {"compound":[{}]} or {"compound":{"id"}}

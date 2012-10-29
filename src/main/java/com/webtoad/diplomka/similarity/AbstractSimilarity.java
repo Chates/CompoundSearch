@@ -4,6 +4,7 @@
  */
 package com.webtoad.diplomka.similarity;
 
+import com.webtoad.diplomka.CompoundSearchException;
 import com.webtoad.diplomka.descriptor.ICompoundDescriptor;
 import com.webtoad.diplomka.descriptor.result.IDescriptorResult;
 import com.webtoad.diplomka.entities.Compound;
@@ -21,14 +22,11 @@ abstract class AbstractSimilarity implements ISimilarity {
     protected List<Compound> compoundsFromDatabase = new ArrayList<Compound>();
     protected List<Compound> similarCompounds = new ArrayList<Compound>();
     protected Compound requestCompound;
-    protected ICompoundDescriptor descriptor;
-    protected IDescriptorResult requestCompoundDescriptorResult;
-    @EJB
-    protected ListResource listResource;
 
     @Override
-    public List<Compound> findAllSimilar() {
-
+    public List<Compound> findAllSimilar() throws CompoundSearchException {
+	this.screen();
+	
 	for (Compound c : compoundsFromDatabase) {
 	    if (isSimilar(c)) {
 		similarCompounds.add(c);
@@ -41,8 +39,10 @@ abstract class AbstractSimilarity implements ISimilarity {
     @Override
     public void screen() {
     }
-
-    protected void selectAllCompoundsFromDB() {
-	compoundsFromDatabase = listResource.getCompounds();
+    
+    @Override
+    public void setCompounds(List<Compound> lc) {
+	this.compoundsFromDatabase = lc;
     }
+
 }

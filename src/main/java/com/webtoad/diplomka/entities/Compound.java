@@ -1,5 +1,6 @@
 package com.webtoad.diplomka.entities;
 
+import com.webtoad.diplomka.CompoundSearchException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +35,13 @@ public class Compound {
     @Column(name = "molfile", length = 10000, nullable = false)
     private String molfile;
 
+    public Compound() {
+    }
+
+    public Compound(String molfile) {
+	this.molfile = molfile;
+    }
+
     public Long getId() {
 	return id;
     }
@@ -65,14 +73,32 @@ public class Compound {
     public void setMolfile(String molfile) {
 	this.molfile = molfile;
     }
-    
-    public AtomContainer getAtomContainer() throws CDKException, IOException {
-	InputStream is = new ByteArrayInputStream(this.molfile.getBytes());
-	MDLV2000Reader reader = new MDLV2000Reader(is);
-	AtomContainer molecule = reader.read(new AtomContainer());
-	is.close();
-	reader.close();
+
+    public AtomContainer getAtomContainer() throws CompoundSearchException {
+	AtomContainer molecule;
+	
+	// If Compound doesnt have molfile throw an exception
+	if (this.molfile != null) {
+	    try {
+		// Create AtomContainer using CDK library file reader.
+		InputStream is = new ByteArrayInputStream(this.molfile.getBytes());
+		MDLV2000Reader reader = new MDLV2000Reader(is);
+		molecule = reader.read(new AtomContainer());
+		is.close();
+		reader.close();
+	    } catch (CDKException e) {
+		throw new CompoundSearchException("Unable to create AtomContainer from compound. CDK error parsing molfile.");
+	    } catch (IOException e) {
+		throw new CompoundSearchException("Unable to create AtomContainer from compound. Error reading molfile.");
+	    }
+	} else {
+	    throw new CompoundSearchException("Unable to create AtomContainer from compound. Compound doesnt have molfile.");
+	}
 
 	return molecule;
+    }
+
+    private void computePropertiesFromMolfile() {
+	// TODO: Tady by mohla byt metoda, ktera dopocita vsechno co komponenta potrebuje z molfilu
     }
 }

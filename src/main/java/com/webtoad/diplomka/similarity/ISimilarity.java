@@ -16,9 +16,11 @@ public interface ISimilarity {
     
     public void screen();
 
-    public List<Compound> findAllSimilar();
+    public List<Compound> findAllSimilar() throws CompoundSearchException;
     
-    public Boolean isSimilar(Compound c) throws CompoundSearchException ;
+    public Boolean isSimilar(Compound c) throws CompoundSearchException;
+    
+    public void setCompounds(List<Compound> lc);
     
     
 }

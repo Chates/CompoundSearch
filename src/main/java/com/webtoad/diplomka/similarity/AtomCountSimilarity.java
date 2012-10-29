@@ -6,8 +6,9 @@ package com.webtoad.diplomka.similarity;
 
 import com.webtoad.diplomka.CompoundSearchException;
 import com.webtoad.diplomka.descriptor.AtomCountDescriptor;
+import com.webtoad.diplomka.descriptor.ICompoundDescriptor;
+import com.webtoad.diplomka.descriptor.result.IDescriptorResult;
 import com.webtoad.diplomka.entities.Compound;
-import java.util.List;
 
 /**
  *
@@ -15,17 +16,21 @@ import java.util.List;
  */
 public class AtomCountSimilarity extends AbstractSimilarity {
 
-    public AtomCountSimilarity(Compound requestCompound) throws CompoundSearchException {
-	this.selectAllCompoundsFromDB();
-	this.requestCompound = requestCompound;
-	this.descriptor = new AtomCountDescriptor();
-	this.requestCompoundDescriptorResult = this.descriptor.calculate(requestCompound);
-    }
+    private ICompoundDescriptor atomCountDescriptor;
+    private IDescriptorResult acdRequestResult;
 
+    public AtomCountSimilarity(Compound requestCompound) throws CompoundSearchException {
+	this.requestCompound = requestCompound;
+
+	this.atomCountDescriptor = new AtomCountDescriptor();
+	this.acdRequestResult = this.atomCountDescriptor.calculate(this.requestCompound);
+    }
 
     @Override
     public Boolean isSimilar(Compound c) throws CompoundSearchException {
-	if (this.requestCompoundDescriptorResult == this.descriptor.calculate(c)) {
+	Integer requestAtoms = Integer.parseInt(this.acdRequestResult.toString());
+	Integer compoundFromDBAtoms = Integer.parseInt(this.atomCountDescriptor.calculate(c).toString());
+	if (requestAtoms == compoundFromDBAtoms) {
 	    return true;
 	}
 	return false;
