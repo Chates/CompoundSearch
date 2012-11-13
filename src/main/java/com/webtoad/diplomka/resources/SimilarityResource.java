@@ -8,6 +8,8 @@ import com.webtoad.diplomka.CompoundSearchException;
 import com.webtoad.diplomka.SimilarityRequestXML;
 import com.webtoad.diplomka.entities.Compound;
 import com.webtoad.diplomka.similarity.AtomCountSimilarity;
+import com.webtoad.diplomka.similarity.SimilarityResult;
+import com.webtoad.diplomka.similarity.SubstructureSimilarity;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -38,15 +40,42 @@ public class SimilarityResource {
     private ListResource listResource;
 
     @POST
+    @Path("/substructure/")
+    public List<SimilarityResult> substructureSimilarity(JAXBElement<SimilarityRequestXML> sr) {
+	try {
+	    Compound requestCompound = new Compound(sr.getValue().getMolfile());
+	    SubstructureSimilarity ss = new SubstructureSimilarity(requestCompound);
+
+	    List<SimilarityResult> similarityResults = ss.findAllSimilar();
+
+	    if (similarityResults.isEmpty()) {
+		CompoundResponse cr = new CompoundResponse("None compound is similar.", 404);
+		throw new WebApplicationException(cr.buildResponse());
+	    }
+
+	    return similarityResults;
+	} catch (CompoundSearchException e) {
+	    CompoundResponse cr = new CompoundResponse(500, e);
+	    throw new WebApplicationException(cr.buildResponse());
+	}
+
+    }
+
+    @POST
     @Path("/atom-count/")
-    public List<Compound> atomCountSimilarity(JAXBElement<SimilarityRequestXML> sr) {
+    public List<SimilarityResult> atomCountSimilarity(JAXBElement<SimilarityRequestXML> sr) {
 
 	try {
 	    Compound requestCompound = new Compound(sr.getValue().getMolfile());
 	    AtomCountSimilarity acs = new AtomCountSimilarity(requestCompound);
-	    acs.setCompounds(listResource.getCompounds());
+	    
+	    Object[] parameters = new Object[2];
+	    parameters[0] = 0.8;
+	    parameters[1] = 10;
+	    acs.setParameters(parameters);	    
+	    acs.setEntityManager(this.em);
 
-	    List<Compound> similarityResults = acs.findAllSimilar();
+	    List<SimilarityResult> similarityResults = acs.findAllSimilar();
 
 	    if (similarityResults.isEmpty()) {
 		CompoundResponse cr = new CompoundResponse("None compound is similar.", 404);

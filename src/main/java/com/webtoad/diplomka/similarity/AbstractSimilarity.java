@@ -5,13 +5,10 @@
 package com.webtoad.diplomka.similarity;
 
 import com.webtoad.diplomka.CompoundSearchException;
-import com.webtoad.diplomka.descriptor.ICompoundDescriptor;
-import com.webtoad.diplomka.descriptor.result.IDescriptorResult;
 import com.webtoad.diplomka.entities.Compound;
-import com.webtoad.diplomka.resources.ListResource;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import javax.ejb.EJB;
 
 /**
  *
@@ -19,30 +16,69 @@ import javax.ejb.EJB;
  */
 abstract class AbstractSimilarity implements ISimilarity {
 
-    protected List<Compound> compoundsFromDatabase = new ArrayList<Compound>();
-    protected List<Compound> similarCompounds = new ArrayList<Compound>();
+    protected List<SimilarityResult> similarCompounds = new ArrayList<SimilarityResult>();
     protected Compound requestCompound;
+    protected Integer batchSize = 100;
+    protected Double treshold = 0.8;
+    protected Integer numberOfResults = 100;
 
     @Override
-    public List<Compound> findAllSimilar() throws CompoundSearchException {
+    public List<SimilarityResult> findAllSimilar() throws CompoundSearchException {
+	// Run screening function first
 	this.screen();
-	
-	for (Compound c : compoundsFromDatabase) {
-	    if (isSimilar(c)) {
-		similarCompounds.add(c);
+
+	// Postune brani sloucenin
+	Integer start = 0;
+	while (true) {
+	    List<Compound> result;
+	    result = getCompounds(start, this.batchSize);
+
+	    // is result empty? If yes exit cycle
+	    if (result.isEmpty()) {
+		break;
 	    }
-	}
+
+	    // Run the similar function for all returned compounds
+	    Double currentSimilarity;
+	    for (Compound c : result) {
+		currentSimilarity = calculateSimilarity(c);
+		// Is similrity over the requested treshold?
+		if (currentSimilarity >= this.treshold) {
+		    similarCompounds.add(new SimilarityResult(c, currentSimilarity));
+		}
+	    }
+
+	    // Sort results according to similarity
+	    Collections.sort(similarCompounds);
+
+	    // If similarity of last returned compound is higher than current
+	    // treshold we set treshold higher since lower similarities wont
+	    // fit to number of results.
+	    if (similarCompounds.size() > numberOfResults) {
+		Double lastReturnedSimilarity = similarCompounds.get(numberOfResults - 1).getSimilarity();
+		if (lastReturnedSimilarity > this.treshold) {
+		    this.treshold = lastReturnedSimilarity;
+		}
+		
+		// Cut sorted list to requested size. Saving memory keeping only best results
+		similarCompounds = similarCompounds.subList(0, this.numberOfResults);
+	    }	    
+
+	    start += this.batchSize;
+	}	
 
 	return similarCompounds;
     }
 
     @Override
-    public void screen() {
-    }
-    
-    @Override
-    public void setCompounds(List<Compound> lc) {
-	this.compoundsFromDatabase = lc;
+    public void screen() throws CompoundSearchException {
     }
 
+    public Integer getBatchSize() {
+	return batchSize;
+    }
+
+    public void setBatchSize(Integer batchSize) {
+	this.batchSize = batchSize;
+    }
 }

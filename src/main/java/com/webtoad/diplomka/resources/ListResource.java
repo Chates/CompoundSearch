@@ -34,6 +34,14 @@ public class ListResource {
 
     @PersistenceContext(unitName = "com.webtoad_Diplomka_maven_war_1.0PU")
     private EntityManager em;
+    
+    public ListResource() {
+	
+    }
+    
+    public ListResource(EntityManager em) {
+	this.em = em;
+    }
 
     private TypedQuery<Compound> getCompoundTQ() {
 	CriteriaBuilder crtiteriaBuilder = em.getCriteriaBuilder();

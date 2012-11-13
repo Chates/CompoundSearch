@@ -14,13 +14,20 @@ import java.util.List;
  */
 public interface ISimilarity {
     
-    public void screen();
+    public void screen() throws CompoundSearchException;
 
-    public List<Compound> findAllSimilar() throws CompoundSearchException;
+    public List<SimilarityResult> findAllSimilar() throws CompoundSearchException;
     
-    public Boolean isSimilar(Compound c) throws CompoundSearchException;
+    public Double calculateSimilarity(Compound c) throws CompoundSearchException;
     
-    public void setCompounds(List<Compound> lc);
+    public List<Compound> getCompounds(Integer start, Integer limit) throws CompoundSearchException;;
+
+    public void setParameters(Object[] parameters) throws CompoundSearchException;
     
+    public Object[] getParameters();
+    
+    public String[] getParameterNames();
+    
+    public Object getParameterType(String name);
     
 }
