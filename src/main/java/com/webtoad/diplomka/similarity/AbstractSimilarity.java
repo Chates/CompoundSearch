@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @author Chates
  */
-abstract class AbstractSimilarity implements ISimilarity {
+public abstract class AbstractSimilarity implements ISimilarity {
 
     protected List<SimilarityResult> similarCompounds = new ArrayList<SimilarityResult>();
     protected Compound requestCompound;
@@ -48,7 +48,7 @@ abstract class AbstractSimilarity implements ISimilarity {
 		}
 	    }
 
-	    // Sort results according to similarity
+	    // Sort results by similarity
 	    Collections.sort(similarCompounds);
 
 	    // If similarity of last returned compound is higher than current

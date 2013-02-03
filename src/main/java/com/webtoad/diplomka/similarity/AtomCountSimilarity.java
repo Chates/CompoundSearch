@@ -10,10 +10,10 @@ import com.webtoad.diplomka.descriptor.ICompoundDescriptor;
 import com.webtoad.diplomka.descriptor.result.IDescriptorResult;
 import com.webtoad.diplomka.entities.Compound;
 import com.webtoad.diplomka.resources.ListResource;
-import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.EntityManager;
-import javax.ws.rs.WebApplicationException;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 /**
  *
@@ -23,7 +23,6 @@ public class AtomCountSimilarity extends AbstractSimilarity {
 
     private ICompoundDescriptor atomCountDescriptor;
     private IDescriptorResult acdRequestResult;
-    private EntityManager entityManager;
 
     public AtomCountSimilarity(Compound requestCompound) throws CompoundSearchException {
 	this.requestCompound = requestCompound;
@@ -95,23 +94,18 @@ public class AtomCountSimilarity extends AbstractSimilarity {
 
     @Override
     public List<Compound> getCompounds(Integer start, Integer limit) throws CompoundSearchException {
-	// Is entity manager set yet?
-	if (this.entityManager == null) {
-	    throw new CompoundSearchException("AtomCount similarity doesnt have database connection.");
-	}
-
-	ListResource lr = new ListResource(this.entityManager);
-	List<Compound> result = new ArrayList<Compound>();
-	
+	ListResource lr;
+	List<Compound> result;
 	try {
-	    result = lr.getCompounds(limit, start);
-	} catch (WebApplicationException e) { // result is empty do nothing, empty result is returned
-	   
+	    Context context = new InitialContext();
+	    lr = (ListResource) context.lookup("java:module/ListResource");
+	    lr.setCalledFromApp(true); // Must be set. 404 WebApplicationException is invoked and app stopped otherwise.
+	} catch (NamingException e) {
+	    throw new CompoundSearchException("Database error in AtomCountSimilarity. Cannot optain REST resources.");
 	}
-	return result;
-    }
 
-    public void setEntityManager(EntityManager em) {
-	this.entityManager = em;
+	result = lr.getCompounds(limit, start);
+
+	return result;
     }
 }

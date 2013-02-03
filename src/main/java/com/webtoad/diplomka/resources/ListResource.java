@@ -35,9 +35,11 @@ public class ListResource {
     @PersistenceContext(unitName = "com.webtoad_Diplomka_maven_war_1.0PU")
     private EntityManager em;
     
+    private Boolean calledFromApp = false;
+    
     public ListResource() {
 	
-    }
+    }    
     
     public ListResource(EntityManager em) {
 	this.em = em;
@@ -59,7 +61,8 @@ public class ListResource {
 	TypedQuery<Compound> tq = this.getCompoundTQ();
 	List<Compound> list = tq.getResultList();
 
-	if (list.isEmpty()) {
+	// Return 404 response when called from client. Return empty list otherwise.
+	if (list.isEmpty() && this.calledFromApp == false) {
 	    throw new WebApplicationException(Response.status(404).entity("There are no compounds in database.").build());
 	}
 
@@ -75,7 +78,8 @@ public class ListResource {
 
 	List<Compound> list = tq.getResultList();
 
-	if (list.isEmpty()) {
+	// Return 404 response when called from client. Return empty list otherwise.
+	if (list.isEmpty() && this.calledFromApp == false) {
 	    throw new WebApplicationException(Response.status(404).entity("There are no compounds in database.").build());
 	}
 
@@ -92,10 +96,15 @@ public class ListResource {
 
 	List<Compound> list = tq.getResultList();
 
-	if (list.isEmpty()) {
+	// Return 404 response when called from client. Return empty list otherwise.
+	if (list.isEmpty() && this.calledFromApp == false) {
 	    throw new WebApplicationException(Response.status(404).entity("No compounds matching given request.").build());
 	}
 
 	return list;
+    }
+    
+    public void setCalledFromApp(Boolean b) {
+	this.calledFromApp = b;
     }
 }

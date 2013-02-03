@@ -7,10 +7,13 @@ package com.webtoad.diplomka.resources;
 import com.webtoad.diplomka.CompoundSearchException;
 import com.webtoad.diplomka.SimilarityRequestXML;
 import com.webtoad.diplomka.entities.Compound;
+import com.webtoad.diplomka.similarity.AbstractSimilarity;
 import com.webtoad.diplomka.similarity.AtomCountSimilarity;
+import com.webtoad.diplomka.similarity.ISimilarity;
 import com.webtoad.diplomka.similarity.SimilarityResult;
 import com.webtoad.diplomka.similarity.SubstructureSimilarity;
 import java.util.List;
+import java.util.Set;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -23,6 +26,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBElement;
+import org.reflections.Reflections;
 
 /**
  *
@@ -39,6 +43,20 @@ public class SimilarityResource {
     @EJB
     private ListResource listResource;
 
+//    @POST
+//    @Path("/similarity/")
+//    public List<SimilarityResult> similarity(JAXBElement<SimilarityRequestXML> sr) {
+//	try {
+//	   
+//	    
+//	    
+//	    
+//	} catch (CompoundSearchException e) {
+//	    CompoundResponse cr = new CompoundResponse(500, e);
+//	    throw new WebApplicationException(cr.buildResponse());
+//	}
+//
+//    }
     @POST
     @Path("/substructure/")
     public List<SimilarityResult> substructureSimilarity(JAXBElement<SimilarityRequestXML> sr) {
@@ -65,15 +83,17 @@ public class SimilarityResource {
     @Path("/atom-count/")
     public List<SimilarityResult> atomCountSimilarity(JAXBElement<SimilarityRequestXML> sr) {
 
+	Reflections reflections = new Reflections("com.webtoad.diplomka.similarity");
+	Set<Class<? extends ISimilarity>> subTypes = reflections.getSubTypesOf(ISimilarity.class);
+
 	try {
 	    Compound requestCompound = new Compound(sr.getValue().getMolfile());
 	    AtomCountSimilarity acs = new AtomCountSimilarity(requestCompound);
-	    
+
 	    Object[] parameters = new Object[2];
 	    parameters[0] = 0.8;
 	    parameters[1] = 10;
-	    acs.setParameters(parameters);	    
-	    acs.setEntityManager(this.em);
+	    acs.setParameters(parameters);
 
 	    List<SimilarityResult> similarityResults = acs.findAllSimilar();
 
