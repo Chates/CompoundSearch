@@ -7,24 +7,32 @@ package com.webtoad.diplomka.resources;
 import com.webtoad.diplomka.CompoundSearchException;
 import com.webtoad.diplomka.SimilarityRequestXML;
 import com.webtoad.diplomka.entities.Compound;
-import com.webtoad.diplomka.similarity.AbstractSimilarity;
+import com.webtoad.diplomka.results.SimilarityCompoundResult;
+import com.webtoad.diplomka.results.SimilarityInfoResult;
+import com.webtoad.diplomka.results.SimilarityParameter;
+import com.webtoad.diplomka.results.SimilarityResult;
+import com.webtoad.diplomka.results.SimilarityStatsResult;
 import com.webtoad.diplomka.similarity.AtomCountSimilarity;
 import com.webtoad.diplomka.similarity.ISimilarity;
-import com.webtoad.diplomka.similarity.SimilarityResult;
 import com.webtoad.diplomka.similarity.SubstructureSimilarity;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.Stateful;
+import javax.ejb.StatefulTimeout;
+import javax.enterprise.context.SessionScoped;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBElement;
 import org.reflections.Reflections;
 
@@ -32,29 +40,52 @@ import org.reflections.Reflections;
  *
  * @author Chates
  */
+@SessionScoped
 @Path("/similarity/")
 @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-@Stateless
+@Stateful
+@StatefulTimeout(600000) // 10 minutes
 public class SimilarityResource {
 
     @PersistenceContext(unitName = "com.webtoad_Diplomka_maven_war_1.0PU")
     private EntityManager em;
     @EJB
-    private ListResource listResource;
+    private IdResource idResource;
+    private List<SimilarityResult> savedSimilarityResults = new ArrayList<SimilarityResult>();
+
+    /**
+     * Returns all available similarities and their parameters
+     *
+     * @return
+     */
+    @GET
+    @Path("/info/")
+    public List<SimilarityInfoResult> getAllSimilarities() {
+
+	Set<ISimilarity> similarities = this.getSimilaritiesReflection();
+
+	List<SimilarityInfoResult> result = new ArrayList<SimilarityInfoResult>();
+
+	for (ISimilarity s : similarities) {
+	    List<SimilarityParameter> parameters = new ArrayList<SimilarityParameter>();
+	    
+	    // Get all parameters for similarity
+	    String[] pNames = s.getParameterNames();
+	    // For each parameter get its type
+	    for (String pName : pNames) {
+		parameters.add(new SimilarityParameter(pName, s.getParameterType(pName).getClass().getSimpleName()));	
+	    }
+	    result.add(new SimilarityInfoResult(s.getClass().getSimpleName(), parameters));
+	}
+
+	return result;
+    }
 
 //    @POST
-//    @Path("/similarity/")
-//    public List<SimilarityResult> similarity(JAXBElement<SimilarityRequestXML> sr) {
-//	try {
-//	   
-//	    
-//	    
-//	    
-//	} catch (CompoundSearchException e) {
-//	    CompoundResponse cr = new CompoundResponse(500, e);
-//	    throw new WebApplicationException(cr.buildResponse());
-//	}
+//    @Path("/")
+//    public List<SimilarityResult> universalSimilarity(JAXBElement<SimilarityRequestXML> sr) {
+//	
 //
 //    }
     @POST
@@ -81,12 +112,14 @@ public class SimilarityResource {
 
     @POST
     @Path("/atom-count/")
-    public List<SimilarityResult> atomCountSimilarity(JAXBElement<SimilarityRequestXML> sr) {
+    public SimilarityStatsResult atomCountSimilarity(JAXBElement<SimilarityRequestXML> sr) {
 
-	Reflections reflections = new Reflections("com.webtoad.diplomka.similarity");
-	Set<Class<? extends ISimilarity>> subTypes = reflections.getSubTypesOf(ISimilarity.class);
+	// REFLECTION
+//	Reflections reflections = new Reflections("com.webtoad.diplomka.similarity");
+//	Set<Class<? extends ISimilarity>> subTypes = reflections.getSubTypesOf(ISimilarity.class);
 
 	try {
+
 	    Compound requestCompound = new Compound(sr.getValue().getMolfile());
 	    AtomCountSimilarity acs = new AtomCountSimilarity(requestCompound);
 
@@ -102,101 +135,67 @@ public class SimilarityResource {
 		throw new WebApplicationException(cr.buildResponse());
 	    }
 
-	    return similarityResults;
+	    this.savedSimilarityResults = similarityResults;
+	    return new SimilarityStatsResult(this.savedSimilarityResults.size());
 
 	} catch (CompoundSearchException e) {
 	    CompoundResponse cr = new CompoundResponse(500, e);
 	    throw new WebApplicationException(cr.buildResponse());
 	}
+    }
 
+    @GET
+    @Path("/atom-count/{limit}/")
+    public List<SimilarityCompoundResult> atomCountSimilarity(@PathParam("limit") Integer limit) {
+	// Check wether there are some saved results 
+	if (this.savedSimilarityResults.isEmpty()) {
+	    CompoundResponse cr = new CompoundResponse("Make similarity request first.", 404);
+	    throw new WebApplicationException(cr.buildResponse());
+	}
 
+	// Limit cannot be higher than 1000
+	if (limit > 1000) {
+	    CompoundResponse cr = new CompoundResponse("Maximum limit for similarity result request is 1000.", 404);
+	    throw new WebApplicationException(cr.buildResponse());
+	}
 
+	int index = 0;
+	List<SimilarityCompoundResult> returnResults = new ArrayList<SimilarityCompoundResult>();
 
-	// Obtain test compound from DB
-	//	List<Compound> sourceCompounds = listResource.getCompounds();
-	//
-	//	try {
-	//	    // Create molecule from request
-	//	    InputStream is = new ByteArrayInputStream(sr.getValue().getMolfile().getBytes());
-	//	    MDLV2000Reader reader = new MDLV2000Reader(is);
-	//	    AtomContainer requestMolecule = reader.read(new AtomContainer());
-	//	    is.close();
-	//	    reader.close();
-	//
-	//	    Boolean isSimilar;
-	//
-	//	    // Loop over compounds
-	//	    for (Compound c : sourceCompounds) {
-	//
-	//		// Create Molecule from DB molfile using CDK library
-	//		is = new ByteArrayInputStream(c.getMolfile().getBytes());
-	//		reader = new MDLV2000Reader(is);
-	//		AtomContainer resourceMolecule = reader.read(new AtomContainer());
-	//		is.close();
-	//		reader.close();
-	//
-	//
-	//		// Descriptor testing
-	//		AtomCountDescriptor acd = new AtomCountDescriptor();
-	////		String[] descriptorNames = acd.getDescriptorNames(); // Descriptor Names
-	////		IDescriptorResult descriptorResultType = acd.getDescriptorResultType(); // Descriptor Result Type
-	////		String[] parameterNames = acd.getParameterNames(); // Parameter names
-	////		
-	////		Object[] parameterTypes = new Object[parameterNames.length]; // Parameter types
-	////		Integer i = 0;
-	////		for (String pn : parameterNames) {
-	////		    parameterTypes[i] = acd.getParameterType(pn);
-	////		}
-	//
-	//
-	//
-	//
-	////		Object[] params = new Object[acd.getParameterNames().length];
-	////		params[0] = "C";
-	////		acd.setParameters(params);
-	//
-	//		DescriptorValue dValue = acd.calculate(resourceMolecule);
-	//		IDescriptorResult idR = dValue.getValue();
-	//		try {
-	//		    CompoundDescriptor cd = new CompoundDescriptor();
-	//		    cd.setAtomCount(Integer.parseInt(idR.toString()));
-	//		    cd.setCompound(c);
-	//		    em.persist(cd);
-	//
-	//		    em.flush();
-	//		} catch (PersistenceException e) { // Is it in the database already?
-	//		    
-	//		    
-	//		    Throwable test = e.getCause();
-	//
-	//		    System.out.println("");
-	//		}
-	////		
-	////		String test = idR.toString();
-	//		// Try to compare
-	//		//isSimilar = UniversalIsomorphismTester.isIsomorph(requestMolecule, resourceMolecule); //Exact similarity
-	//
-	//		// Using substructure we need to add implicit hydrogens to resource and to request
-	////		AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(resourceMolecule); // perceive atom types
-	////		CDKHydrogenAdder adder = CDKHydrogenAdder.getInstance(resourceMolecule.getBuilder());
-	////		adder.addImplicitHydrogens(resourceMolecule); // add implicit hydrogens
-	////		AtomContainerManipulator.convertImplicitToExplicitHydrogens(resourceMolecule);
-	////		// request molecule
-	////		AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(requestMolecule); // perceive atom types
-	////		adder = CDKHydrogenAdder.getInstance(requestMolecule.getBuilder());
-	////		adder.addImplicitHydrogens(requestMolecule); // add implicit hydrogens
-	////		AtomContainerManipulator.convertImplicitToExplicitHydrogens(requestMolecule);
-	//
-	//		isSimilar = UniversalIsomorphismTester.isSubgraph(resourceMolecule, requestMolecule);
-	//
-	//		if (isSimilar) {
-	//		    similarityResults.add(c);
-	//		}
-	//	    }
-	//	} catch (CDKException e) {
-	//	    throw new WebApplicationException(Response.serverError().build());
-	//	}
+	// Go through saved similarity results and get compounds from DB
+	while (index < this.savedSimilarityResults.size() && index < limit) {
+	    Compound c = idResource.getCompoundById(this.savedSimilarityResults.get(index).getId()).get(0);
+	    Double s = this.savedSimilarityResults.get(index).getSimilarity();
+	    returnResults.add(new SimilarityCompoundResult(c, s));
+	    index++;
+	}
 
+	return returnResults;
+    }
 
+    private Set<ISimilarity> getSimilaritiesReflection() {
+	// Get all available Similarities via reflection
+	Reflections reflections = new Reflections("com.webtoad.diplomka.similarity");
+	Set<Class<? extends ISimilarity>> similarities = reflections.getSubTypesOf(ISimilarity.class);
+
+	Set<ISimilarity> similaritiesToReturn = new HashSet<ISimilarity>();
+	// We need to remove AbstractSimilarity from the set of similarities
+	for (Class<? extends ISimilarity> s : similarities) {
+	    if (!s.getSimpleName().equals("AbstractSimilarity")) {
+		try {
+		    similaritiesToReturn.add(s.newInstance());
+		} catch (InstantiationException e) {
+		    String message = " similarity cannot be inicialized. Probably doesnt have an empty constructor.";
+		    CompoundResponse cr = new CompoundResponse(s.getSimpleName() + message, 500);
+		    throw new WebApplicationException(cr.buildResponse());
+		} catch (IllegalAccessException e) {
+		    String message = " similarity cannot be inicialized.";
+		    CompoundResponse cr = new CompoundResponse(s.getSimpleName() + message, 500);
+		    throw new WebApplicationException(cr.buildResponse());
+		}
+	    }
+	}
+
+	return similaritiesToReturn;
     }
 }

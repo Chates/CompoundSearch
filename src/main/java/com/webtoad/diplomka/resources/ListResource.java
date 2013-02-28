@@ -35,6 +35,9 @@ public class ListResource {
     @PersistenceContext(unitName = "com.webtoad_Diplomka_maven_war_1.0PU")
     private EntityManager em;
     
+    // Parameter to determine whether this resource is called from within 
+    // an application or from HTTP request. Will react differently for empty 
+    // results from database.
     private Boolean calledFromApp = false;
     
     public ListResource() {
@@ -103,6 +106,7 @@ public class ListResource {
 
 	return list;
     }
+    
     
     public void setCalledFromApp(Boolean b) {
 	this.calledFromApp = b;

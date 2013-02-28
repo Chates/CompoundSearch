@@ -21,6 +21,9 @@ public class SubstructureSimilarity extends AbstractSimilarity {
 	this.treshold = 1.0;
     }
 
+    public SubstructureSimilarity() {
+    }
+
     @Override
     public Double calculateSimilarity(Compound c) throws CompoundSearchException {
 	try {
@@ -51,12 +54,23 @@ public class SubstructureSimilarity extends AbstractSimilarity {
 
     @Override
     public String[] getParameterNames() {
-	throw new UnsupportedOperationException("Not supported yet.");
+	String[] names = new String[2];
+	names[0] = "treshold";
+	names[1] = "numberOfResults";
+
+	return names;
     }
 
     @Override
     public Object getParameterType(String name) {
-	throw new UnsupportedOperationException("Not supported yet.");
-    }
+	if (name.equals("treshold")) {
+	    return 0.0;
+	}
 
+	if (name.equals("numberOfResults")) {
+	    return 1;
+	}
+
+	return null;
+    }
 }

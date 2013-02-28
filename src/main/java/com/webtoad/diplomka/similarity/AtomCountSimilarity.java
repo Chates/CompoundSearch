@@ -10,6 +10,8 @@ import com.webtoad.diplomka.descriptor.ICompoundDescriptor;
 import com.webtoad.diplomka.descriptor.result.IDescriptorResult;
 import com.webtoad.diplomka.entities.Compound;
 import com.webtoad.diplomka.resources.ListResource;
+import com.webtoad.diplomka.resources.ListResource;
+import com.webtoad.diplomka.similarity.AbstractSimilarity;
 import java.util.List;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -30,6 +32,11 @@ public class AtomCountSimilarity extends AbstractSimilarity {
 	this.atomCountDescriptor = new AtomCountDescriptor();
 	this.acdRequestResult = this.atomCountDescriptor.calculate(this.requestCompound);
     }
+    
+    public AtomCountSimilarity() {
+	
+    }
+    
 
     @Override
     public Double calculateSimilarity(Compound c) throws CompoundSearchException {
@@ -99,9 +106,10 @@ public class AtomCountSimilarity extends AbstractSimilarity {
 	try {
 	    Context context = new InitialContext();
 	    lr = (ListResource) context.lookup("java:module/ListResource");
-	    lr.setCalledFromApp(true); // Must be set. 404 WebApplicationException is invoked and app stopped otherwise.
+	    // Must be set. 404 WebApplicationException is invoked and app stopped when empty result otherwise.
+	    lr.setCalledFromApp(true); 
 	} catch (NamingException e) {
-	    throw new CompoundSearchException("Database error in AtomCountSimilarity. Cannot optain REST resources.");
+	    throw new CompoundSearchException("Database error in AtomCountSimilarity. Cannot obtain REST resources.");
 	}
 
 	result = lr.getCompounds(limit, start);

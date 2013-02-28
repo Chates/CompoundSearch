@@ -4,6 +4,7 @@
  */
 package com.webtoad.diplomka.similarity;
 
+import com.webtoad.diplomka.results.SimilarityResult;
 import com.webtoad.diplomka.CompoundSearchException;
 import com.webtoad.diplomka.entities.Compound;
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ public abstract class AbstractSimilarity implements ISimilarity {
     protected Compound requestCompound;
     protected Integer batchSize = 100;
     protected Double treshold = 0.8;
-    protected Integer numberOfResults = 100;
+    protected Integer numberOfResults = 1000;
 
     @Override
     public List<SimilarityResult> findAllSimilar() throws CompoundSearchException {
@@ -44,7 +45,7 @@ public abstract class AbstractSimilarity implements ISimilarity {
 		currentSimilarity = calculateSimilarity(c);
 		// Is similrity over the requested treshold?
 		if (currentSimilarity >= this.treshold) {
-		    similarCompounds.add(new SimilarityResult(c, currentSimilarity));
+		    similarCompounds.add(new SimilarityResult(c.getId(), currentSimilarity));
 		}
 	    }
 

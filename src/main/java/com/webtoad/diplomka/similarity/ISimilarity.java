@@ -4,6 +4,7 @@
  */
 package com.webtoad.diplomka.similarity;
 
+import com.webtoad.diplomka.results.SimilarityResult;
 import com.webtoad.diplomka.CompoundSearchException;
 import com.webtoad.diplomka.entities.Compound;
 import java.util.List;

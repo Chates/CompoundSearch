@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.webtoad.diplomka.similarity;
+package com.webtoad.diplomka.results;
 
 import com.webtoad.diplomka.entities.Compound;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -12,17 +12,17 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Chates
  */
 @XmlRootElement
-public class SimilarityResult implements Comparable<SimilarityResult> {
+public class SimilarityCompoundResult implements Comparable<SimilarityCompoundResult> {
 
     private Compound compound;
     private Double similarity;
 
     // Because of the json/xml message writer
-    public SimilarityResult() {
+    public SimilarityCompoundResult() {
 	
     }
     
-    public SimilarityResult(Compound c, Double similarity) {
+    public SimilarityCompoundResult(Compound c, Double similarity) {
 	this.compound = c;
 	this.similarity = similarity;
     }
@@ -44,7 +44,7 @@ public class SimilarityResult implements Comparable<SimilarityResult> {
     }
 
     @Override
-    public int compareTo(SimilarityResult sr) {
+    public int compareTo(SimilarityCompoundResult sr) {
 	Integer compare = 0;
 
 	if (this.similarity < sr.getSimilarity()) {
