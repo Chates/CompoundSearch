@@ -3,7 +3,7 @@
   <persistence-unit name="com.webtoad_Diplomka_maven_war_1.0PU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>test</jta-data-source>
-    <class>com.webtoad.diplomka.entities.CompoundDescriptor</class>
+    <class>cz.webtoad.diplomka.entities.CompoundDescriptor</class>
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <properties>
       <property name="eclipselink.ddl-generation" value="create-tables"/>
