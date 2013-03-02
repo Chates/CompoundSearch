@@ -4,6 +4,8 @@
  */
 package cz.compoundsearch.requests;
 
+import com.sun.org.apache.xerces.internal.dom.ElementNSImpl;
+import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -13,15 +15,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class SimilarityRequest {
     
-    private String method;
+    private List<String> parameters;
     private String molfile;
+    private String similarity;
 
-    public String getMethod() {
-	return method;
+    public List<String> getParameters() {
+	return parameters;
     }
 
-    public void setMethod(String method) {
-	this.method = method;
+    public void setParameters(List<String> parameters) {
+	this.parameters = parameters;
     }
 
     public String getMolfile() {
@@ -30,6 +33,14 @@ public class SimilarityRequest {
 
     public void setMolfile(String molfile) {
 	this.molfile = molfile;
+    }
+
+    public String getSimilarity() {
+	return similarity;
+    }
+
+    public void setSimilarity(String similarity) {
+	this.similarity = similarity;
     }
     
     

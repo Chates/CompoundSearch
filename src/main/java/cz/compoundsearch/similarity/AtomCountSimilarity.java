@@ -4,14 +4,12 @@
  */
 package cz.compoundsearch.similarity;
 
-import cz.compoundsearch.exceptions.CompoundSearchException;
 import cz.compoundsearch.descriptor.AtomCountDescriptor;
 import cz.compoundsearch.descriptor.ICompoundDescriptor;
 import cz.compoundsearch.descriptor.result.IDescriptorResult;
 import cz.compoundsearch.entities.Compound;
+import cz.compoundsearch.exceptions.CompoundSearchException;
 import cz.compoundsearch.resources.ListResource;
-import cz.compoundsearch.resources.ListResource;
-import cz.compoundsearch.similarity.AbstractSimilarity;
 import java.util.List;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -32,11 +30,16 @@ public class AtomCountSimilarity extends AbstractSimilarity {
 	this.atomCountDescriptor = new AtomCountDescriptor();
 	this.acdRequestResult = this.atomCountDescriptor.calculate(this.requestCompound);
     }
-    
+
     public AtomCountSimilarity() {
-	
+	this.atomCountDescriptor = new AtomCountDescriptor();
     }
-    
+
+    @Override
+    public void setRequestCompound(Compound c) throws CompoundSearchException {
+	this.requestCompound = c;
+	this.acdRequestResult = this.atomCountDescriptor.calculate(this.requestCompound);
+    }
 
     @Override
     public Double calculateSimilarity(Compound c) throws CompoundSearchException {
@@ -49,23 +52,30 @@ public class AtomCountSimilarity extends AbstractSimilarity {
     }
 
     @Override
-    public void setParameters(Object[] parameters) throws CompoundSearchException {
+    public void setParameters(List<String> parameters) throws CompoundSearchException {
 
-	if (parameters.length != 2) {
+	if (parameters.size() != 2) {
 	    throw new CompoundSearchException("AtomCountSimilarity requires 2 parameters");
 	}
 
-	if (!(parameters[0] instanceof Double)) {
+	try {
+	    this.treshold = Double.parseDouble(parameters.get(0));
+	    if (this.treshold <= 0) {
+		throw new CompoundSearchException("AtomCountSimilarity treshold parameter cannot be less or equal to 0.");
+	    }
+	} catch (NumberFormatException e) {
 	    throw new CompoundSearchException("AtomCountSimilarity treshold parameter must be of type Double");
 	}
-
-	if (!(parameters[1] instanceof Integer)) {
-	    throw new CompoundSearchException("AtomCountSimilarity numberOfResults parameter must be of type Integer");
+	
+	try {
+	    this.numberOfResults = Integer.parseInt(parameters.get(1));	
+	    if (this.numberOfResults <= 0) {
+		throw new CompoundSearchException("AtomCountSimilarity numberOfResults parameter cannot be less or equal to 0.");
+	    }
+	} catch (NumberFormatException e) {
+	     throw new CompoundSearchException("AtomCountSimilarity numberOfResults parameter must be of type Integer");
 	}
 
-	// Now everything is ok 	
-	this.treshold = (Double) parameters[0];
-	this.numberOfResults = (Integer) parameters[1];
     }
 
     @Override
@@ -107,7 +117,7 @@ public class AtomCountSimilarity extends AbstractSimilarity {
 	    Context context = new InitialContext();
 	    lr = (ListResource) context.lookup("java:module/ListResource");
 	    // Must be set. 404 WebApplicationException is invoked and app stopped when empty result otherwise.
-	    lr.setCalledFromApp(true); 
+	    lr.setCalledFromApp(true);
 	} catch (NamingException e) {
 	    throw new CompoundSearchException("Database error in AtomCountSimilarity. Cannot obtain REST resources.");
 	}

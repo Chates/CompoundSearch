@@ -4,6 +4,7 @@
  */
 package cz.compoundsearch.results;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -28,7 +29,7 @@ public class SimilarityInfoResult {
 
     public SimilarityInfoResult(String similarityName, List<SimilarityParameter> parameters) {
 	this.similarityName = similarityName;
-	this.parameters = parameters;
+	this.parameters = parameters;	
     }
 
     public String getName() {
@@ -46,4 +47,6 @@ public class SimilarityInfoResult {
     public void setParameters(List<SimilarityParameter> parameters) {
 	this.parameters = parameters;
     }
+    
+    
 }

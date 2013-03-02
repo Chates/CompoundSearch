@@ -60,13 +60,13 @@ public abstract class AbstractSimilarity implements ISimilarity {
 		if (lastReturnedSimilarity > this.treshold) {
 		    this.treshold = lastReturnedSimilarity;
 		}
-		
+
 		// Cut sorted list to requested size. Saving memory keeping only best results
 		similarCompounds = similarCompounds.subList(0, this.numberOfResults);
-	    }	    
+	    }
 
 	    start += this.batchSize;
-	}	
+	}
 
 	return similarCompounds;
     }
@@ -81,5 +81,15 @@ public abstract class AbstractSimilarity implements ISimilarity {
 
     public void setBatchSize(Integer batchSize) {
 	this.batchSize = batchSize;
+    }
+
+    @Override
+    public Compound getRequestCompound() {
+	return requestCompound;
+    }
+
+    @Override
+    public void setRequestCompound(Compound c) throws CompoundSearchException {
+	this.requestCompound = c;
     }
 }

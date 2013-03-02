@@ -23,6 +23,7 @@ public class SubstructureSimilarity extends AbstractSimilarity {
 
     public SubstructureSimilarity() {
     }
+    
 
     @Override
     public Double calculateSimilarity(Compound c) throws CompoundSearchException {
@@ -43,7 +44,7 @@ public class SubstructureSimilarity extends AbstractSimilarity {
     }
 
     @Override
-    public void setParameters(Object[] parameters) throws CompoundSearchException {
+    public void setParameters(List<String> parameters) throws CompoundSearchException {
 	throw new UnsupportedOperationException("Not supported yet.");
     }
 

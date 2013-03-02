@@ -23,12 +23,16 @@ public interface ISimilarity {
     
     public List<Compound> getCompounds(Integer start, Integer limit) throws CompoundSearchException;;
 
-    public void setParameters(Object[] parameters) throws CompoundSearchException;
+    public void setParameters(List<String> parameters) throws CompoundSearchException;
     
     public Object[] getParameters();
     
     public String[] getParameterNames();
     
     public Object getParameterType(String name);
+    
+    public Compound getRequestCompound();
+    
+    public void setRequestCompound(Compound c) throws CompoundSearchException;
     
 }
