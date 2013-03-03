@@ -4,7 +4,6 @@
  */
 package cz.compoundsearch.requests;
 
-import com.sun.org.apache.xerces.internal.dom.ElementNSImpl;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 

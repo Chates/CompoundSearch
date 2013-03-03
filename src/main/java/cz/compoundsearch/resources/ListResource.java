@@ -5,6 +5,7 @@
 package cz.compoundsearch.resources;
 
 import cz.compoundsearch.entities.Compound;
+import cz.compoundsearch.entities.SubstructureFingerprint;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -104,6 +105,25 @@ public class ListResource {
 	    throw new WebApplicationException(Response.status(404).entity("No compounds matching given request.").build());
 	}
 
+	return list;
+    }
+    
+    
+    public List<SubstructureFingerprint> getSubstructureFingerprint(Integer limit, Integer start) {
+	// Create query
+	CriteriaBuilder crtiteriaBuilder = em.getCriteriaBuilder();
+	CriteriaQuery<SubstructureFingerprint> query = crtiteriaBuilder.createQuery(SubstructureFingerprint.class);
+	Root<SubstructureFingerprint> sf = query.from(SubstructureFingerprint.class);
+	query.select(sf);
+	TypedQuery<SubstructureFingerprint> tq = em.createQuery(query);
+	
+	// Set limits
+	tq.setMaxResults(limit);
+	tq.setFirstResult(start);
+
+	// Query database
+	List<SubstructureFingerprint> list = tq.getResultList();
+	
 	return list;
     }
     

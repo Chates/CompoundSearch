@@ -4,12 +4,16 @@
  */
 package cz.compoundsearch.similarity;
 
-import cz.compoundsearch.results.SimilarityResult;
-import cz.compoundsearch.exceptions.CompoundSearchException;
 import cz.compoundsearch.entities.Compound;
+import cz.compoundsearch.entities.ICompound;
+import cz.compoundsearch.exceptions.CompoundSearchException;
+import cz.compoundsearch.exceptions.NoMoreCompoundsException;
+import cz.compoundsearch.results.SimilarityResult;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -25,27 +29,32 @@ public abstract class AbstractSimilarity implements ISimilarity {
 
     @Override
     public List<SimilarityResult> findAllSimilar() throws CompoundSearchException {
-	// Run screening function first
-	this.screen();
+
 
 	// Postune brani sloucenin
 	Integer start = 0;
 	while (true) {
-	    List<Compound> result;
-	    result = getCompounds(start, this.batchSize);
-
-	    // is result empty? If yes exit cycle
-	    if (result.isEmpty()) {
+	    List<? extends ICompound> result;
+	    try {
+		result = screen(start, this.batchSize);
+	    } catch (NoMoreCompoundsException ex) {
+		// No more compounds in database. Exit cycle
 		break;
 	    }
+	    
+	    if (result.isEmpty()) {
+		// All compounds in this iteration were screened, continue to next iteration
+		continue;
+	    }
 
-	    // Run the similar function for all returned compounds
+	    // Run the similarity function for all returned compounds
 	    Double currentSimilarity;
-	    for (Compound c : result) {
-		currentSimilarity = calculateSimilarity(c);
+	    for (ICompound c : result) {
+
+		currentSimilarity = calculateSimilarity(c.getCompound());
 		// Is similrity over the requested treshold?
 		if (currentSimilarity >= this.treshold) {
-		    similarCompounds.add(new SimilarityResult(c.getId(), currentSimilarity));
+		    similarCompounds.add(new SimilarityResult(c.getCompound().getId(), currentSimilarity));
 		}
 	    }
 
@@ -72,7 +81,14 @@ public abstract class AbstractSimilarity implements ISimilarity {
     }
 
     @Override
-    public void screen() throws CompoundSearchException {
+    public List<? extends ICompound> screen(Integer start, Integer limit) throws CompoundSearchException, NoMoreCompoundsException {
+	List<? extends ICompound> result = this.getCompounds(start, limit);
+
+	if (result.isEmpty()) {
+	    throw new NoMoreCompoundsException();
+	}
+	
+	return result;
     }
 
     public Integer getBatchSize() {

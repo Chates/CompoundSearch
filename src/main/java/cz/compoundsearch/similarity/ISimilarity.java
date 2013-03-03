@@ -7,6 +7,8 @@ package cz.compoundsearch.similarity;
 import cz.compoundsearch.results.SimilarityResult;
 import cz.compoundsearch.exceptions.CompoundSearchException;
 import cz.compoundsearch.entities.Compound;
+import cz.compoundsearch.entities.ICompound;
+import cz.compoundsearch.exceptions.NoMoreCompoundsException;
 import java.util.List;
 
 /**
@@ -15,13 +17,13 @@ import java.util.List;
  */
 public interface ISimilarity {
     
-    public void screen() throws CompoundSearchException;
+    public List<? extends ICompound> screen(Integer start, Integer limit) throws CompoundSearchException, NoMoreCompoundsException;
 
     public List<SimilarityResult> findAllSimilar() throws CompoundSearchException;
     
     public Double calculateSimilarity(Compound c) throws CompoundSearchException;
     
-    public List<Compound> getCompounds(Integer start, Integer limit) throws CompoundSearchException;;
+    public List<? extends ICompound> getCompounds(Integer start, Integer limit) throws CompoundSearchException;;
 
     public void setParameters(List<String> parameters) throws CompoundSearchException;
     

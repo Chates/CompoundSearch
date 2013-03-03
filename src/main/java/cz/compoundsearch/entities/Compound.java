@@ -22,7 +22,7 @@ import org.openscience.cdk.io.MDLV2000Reader;
 @Entity
 @XmlRootElement
 @Table(name = "compound")
-public class Compound {
+public class Compound implements ICompound {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -30,9 +30,9 @@ public class Compound {
     private Long id;
     @Column(name = "molecular_formula", length = 255, nullable = false)
     private String molecularFormula;
-    @Column(name = "smiles", length = 255, nullable = false)
+    @Column(name = "smiles", length = 5000, nullable = false)
     private String smiles;
-    @Column(name = "molfile", length = 10000, nullable = false)
+    @Column(name = "molfile", length = 15000, nullable = false)
     private String molfile;
 
     public Compound() {
@@ -40,6 +40,11 @@ public class Compound {
 
     public Compound(String molfile) {
 	this.molfile = molfile;
+    }
+    
+    @Override
+    public Compound getCompound() {
+	return this;
     }
 
     public Long getId() {

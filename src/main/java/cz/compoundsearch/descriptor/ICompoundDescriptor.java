@@ -4,9 +4,9 @@
  */
 package cz.compoundsearch.descriptor;
 
-import cz.compoundsearch.exceptions.CompoundSearchException;
 import cz.compoundsearch.descriptor.result.IDescriptorResult;
 import cz.compoundsearch.entities.Compound;
+import cz.compoundsearch.exceptions.CompoundSearchException;
 
 /**
  *

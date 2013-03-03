@@ -8,6 +8,7 @@ import cz.compoundsearch.descriptor.AtomCountDescriptor;
 import cz.compoundsearch.descriptor.ICompoundDescriptor;
 import cz.compoundsearch.descriptor.result.IDescriptorResult;
 import cz.compoundsearch.entities.Compound;
+import cz.compoundsearch.entities.ICompound;
 import cz.compoundsearch.exceptions.CompoundSearchException;
 import cz.compoundsearch.resources.ListResource;
 import java.util.List;
@@ -110,9 +111,9 @@ public class AtomCountSimilarity extends AbstractSimilarity {
     }
 
     @Override
-    public List<Compound> getCompounds(Integer start, Integer limit) throws CompoundSearchException {
+    public List<? extends ICompound> getCompounds(Integer start, Integer limit) throws CompoundSearchException {
 	ListResource lr;
-	List<Compound> result;
+	List<? extends ICompound> result;
 	try {
 	    Context context = new InitialContext();
 	    lr = (ListResource) context.lookup("java:module/ListResource");

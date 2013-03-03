@@ -16,4 +16,6 @@ public interface IDescriptorResult {
     @Override
     public String toString();
     
+    public Object getValue();
+    
 }

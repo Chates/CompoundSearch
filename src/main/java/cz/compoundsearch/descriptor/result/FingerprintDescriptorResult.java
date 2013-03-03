@@ -4,36 +4,32 @@
  */
 package cz.compoundsearch.descriptor.result;
 
+import java.util.BitSet;
+
 /**
  *
  * @author Chates
  */
-public class IntegerDescriptorResult implements IDescriptorResult {
+public class FingerprintDescriptorResult implements IDescriptorResult {
 
-    private Integer value;
-    
-    public IntegerDescriptorResult(Integer value) {
+    private BitSet value;
+
+    public FingerprintDescriptorResult(BitSet value) {
 	this.value = value;
     }
-    
-    public Integer intValue() {
-	return this.value;
-    }
-    
+
     @Override
     public Integer length() {
-	return 1;
+	return value.size();
     }
-    
+
     @Override
     public String toString() {
-	return Integer.toString(this.value);
+	return value.toString();
     }
-
+    
     @Override
-    public Integer getValue() {
+    public BitSet getValue() {
 	return value;
     }
-
-    
 }

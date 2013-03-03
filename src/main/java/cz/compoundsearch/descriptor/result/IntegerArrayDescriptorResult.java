@@ -52,6 +52,8 @@ public class IntegerArrayDescriptorResult implements IArrayDescriptorResult<Inte
 	return stringBuilder.toString();
     }
 
-
-
+    @Override
+    public ArrayList<Integer> getValue() {
+	return array;
+    }
 }
