@@ -8,6 +8,7 @@ import cz.compoundsearch.descriptor.SubstructureFingerprintDescriptor;
 import cz.compoundsearch.descriptor.result.IDescriptorResult;
 import cz.compoundsearch.entities.Compound;
 import cz.compoundsearch.entities.SubstructureFingerprint;
+import cz.compoundsearch.exceptions.CompoundSearchException;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,7 +36,6 @@ import org.openscience.cdk.io.IChemObjectReader.Mode;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV2000Writer;
 import org.openscience.cdk.smiles.SmilesGenerator;
-import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
@@ -66,11 +66,17 @@ public class FileResource {
 	String sdfCurrentLine;
 
 	int counter = 0;
+	int start = 5100;
 	while ((sdfCurrentLine = br.readLine()) != null) {
 	    // $$$$ marks end of molecule in SDF files if so save molecue to database
 	    if (sdfCurrentLine.equals("$$$$")) {
-		counter ++;
-		if (counter > 1000) {
+		counter++;
+		if (counter < start) {
+		    sdfMolecule = "";
+		    continue;
+		}
+		
+		if (counter > 7100) {
 		    break;
 		}
 
@@ -92,10 +98,10 @@ public class FileResource {
 
 		    // Some MDL file fixes. Needed if mode is set to RELAXED
 		    AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(ia); // perceive atom types
-		    CDKHydrogenAdder adder = CDKHydrogenAdder.getInstance(ia.getBuilder());
-		    adder.addImplicitHydrogens(ia); // add implicit hydrogens
-		    // Convert implicit hydrogens to explicit turned off by default
-		    //AtomContainerManipulator.convertImplicitToExplicitHydrogens(ia); 
+		    //CDKHydrogenAdder adder = CDKHydrogenAdder.getInstance(ia.getBuilder());
+		    //adder.addImplicitHydrogens(ia); // add implicit hydrogens
+		    // Remove hydrogens since we work only with implicit hydrogens and structure is smaller in database
+		    ia = AtomContainerManipulator.removeHydrogens(ia);
 //		    try {
 //			// Deduce bond order 4 because SDF cannot hold bond order 4
 //			DeduceBondSystemTool dbst = new DeduceBondSystemTool();
@@ -127,23 +133,30 @@ public class FileResource {
 			    c.setMolecularFormula(mfString);
 			    c.setSmiles(smiles);
 			    c.setMolfile(molfile);
-			    em.persist(c);
-			    
-			    // Generate and save fingerprint
-			    SubstructureFingerprint sf = new SubstructureFingerprint();			    
+
+
+			    // Generate substructure fingerprint
+			    SubstructureFingerprint sf = new SubstructureFingerprint();
 			    SubstructureFingerprintDescriptor sfd = new SubstructureFingerprintDescriptor();
-			    IDescriptorResult idr = sfd.calculate(c);
+			    IDescriptorResult idr;
+			    try {								
+				idr = sfd.calculate(c);
+			    } catch (CompoundSearchException e) {
+				continue; // Cannot calculate fingerptint skip compound.
+			    }
 			    sf.setCompound(c);
 			    sf.setFingerprint((BitSet) idr.getValue());
-			    em.persist(sf);			    
-			    
+
+			    em.persist(c);
+			    em.persist(sf);
+
 			} catch (CDKException e) {
 			    continue; // If mol file is not generated, skip it
 			}
 		    }
 
 		}
-		
+
 		sdfMolecule = "";
 	    } else {
 		sdfMolecule += sdfCurrentLine + "\n";

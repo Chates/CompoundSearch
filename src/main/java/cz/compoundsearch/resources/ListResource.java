@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cz.compoundsearch.resources;
 
 import cz.compoundsearch.entities.Compound;
@@ -24,8 +20,15 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
+ * REST resource returning a compounds from database searched by different
+ * criteria.
  *
- * @author Chates
+ * Resource can produce both JSON and XML formats based on "Accept" header in
+ * HTTP request.
+ *
+ * <p><strong>This resource is mapped to /list/ URL</strong></p>
+ *
+ * @author Martin Mates
  */
 @Path("/list/")
 @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -35,30 +38,29 @@ public class ListResource {
 
     @PersistenceContext(unitName = "com.webtoad_Diplomka_maven_war_1.0PU")
     private EntityManager em;
-    
-    // Parameter to determine whether this resource is called from within 
-    // an application or from HTTP request. Will react differently for empty 
-    // results from database.
     private Boolean calledFromApp = false;
-    
+
     public ListResource() {
-	
-    }    
-    
+    }
+
     public ListResource(EntityManager em) {
 	this.em = em;
     }
 
-    private TypedQuery<Compound> getCompoundTQ() {
-	CriteriaBuilder crtiteriaBuilder = em.getCriteriaBuilder();
-	CriteriaQuery<Compound> query = crtiteriaBuilder.createQuery(Compound.class);
-	Root<Compound> c = query.from(Compound.class);
-	query.select(c);
-
-	TypedQuery<Compound> tq = em.createQuery(query);
-	return tq;
-    }
-
+    /**
+     * Return all compounds from database.
+     *
+     * If database contains no compounds response with status 404 (Not found) is
+     * returned and header "Compound-search-error" is added to response
+     * explaining the error.
+     *
+     * If parameter {@link #setCalledFromApp} is set to true, empty ArrayList is
+     * returned instead of 404 response.
+     *
+     * <p><strong>Method is mapped to /list/ URL.</strong></p>
+     *
+     * @return	ArrayList All compounds from database
+     */
     @GET
     @Path("/")
     public List<Compound> getCompounds() {
@@ -73,6 +75,20 @@ public class ListResource {
 	return list;
     }
 
+    /**
+     * Return specified number of compounds from database.
+     *
+     * If database contains no compounds response with status 404 (Not found) is
+     * returned and header "Compound-search-error" is added to response
+     * explaining the error.
+     *
+     * If parameter {@link #setCalledFromApp} is set to true, empty ArrayList is
+     * returned instead of 404 response.
+     *
+     * <p><strong>Method is mapped to /list/{limit} URL.</strong></p>
+     *
+     * @return	ArrayList compounds from database
+     */
     @GET
     @Path("/{limit}/")
     public List<Compound> getCompounds(@PathParam("limit") Integer limit) {
@@ -90,6 +106,21 @@ public class ListResource {
 	return list;
     }
 
+    /**
+     * Return specified number of compounds from database and start from
+     * specified index.
+     *
+     * If database contains no compounds response with status 404 (Not found) is
+     * returned and header "Compound-search-error" is added to response
+     * explaining the error.
+     *
+     * If parameter {@link #setCalledFromApp} is set to true, empty ArrayList is
+     * returned instead of 404 response.
+     *
+     * <p><strong>Method is mapped to /list/{limit}/{start} URL.</strong></p>
+     *
+     * @return	ArrayList compounds from database
+     */
     @GET
     @Path("/{limit}/{start}/")
     public List<Compound> getCompounds(@PathParam("limit") Integer limit, @PathParam("start") Integer start) {
@@ -107,8 +138,14 @@ public class ListResource {
 
 	return list;
     }
-    
-    
+
+    /**
+     * Used by {@link cz.compoundsearch.similarity.SubstructureSimilarity} and 
+     * {@link cz.compoundsearch.descriptor.SubstructureFingerprintDescriptor} to
+     * retrieve compounds with SubstructureFingeprint descriptor value.
+     *
+     * @return	ArrayList compounds from database
+     */
     public List<SubstructureFingerprint> getSubstructureFingerprint(Integer limit, Integer start) {
 	// Create query
 	CriteriaBuilder crtiteriaBuilder = em.getCriteriaBuilder();
@@ -116,19 +153,41 @@ public class ListResource {
 	Root<SubstructureFingerprint> sf = query.from(SubstructureFingerprint.class);
 	query.select(sf);
 	TypedQuery<SubstructureFingerprint> tq = em.createQuery(query);
-	
+
 	// Set limits
 	tq.setMaxResults(limit);
 	tq.setFirstResult(start);
 
 	// Query database
 	List<SubstructureFingerprint> list = tq.getResultList();
-	
+
 	return list;
     }
-    
-    
+
+    /**
+     * Parameter to determine whether this resource is called from within an
+     * application or from HTTP request.
+     *
+     * Defaults to false (called from client as web service)
+     *
+     * Resource react differently for empty results from database.
+     */
     public void setCalledFromApp(Boolean b) {
 	this.calledFromApp = b;
+    }
+
+    /**
+     * Helper function for creating database typed query for Compound entity
+     *
+     * @return TypedQuery Prepared typed query for Compound entity
+     */
+    private TypedQuery<Compound> getCompoundTQ() {
+	CriteriaBuilder crtiteriaBuilder = em.getCriteriaBuilder();
+	CriteriaQuery<Compound> query = crtiteriaBuilder.createQuery(Compound.class);
+	Root<Compound> c = query.from(Compound.class);
+	query.select(c);
+
+	TypedQuery<Compound> tq = em.createQuery(query);
+	return tq;
     }
 }

@@ -4,8 +4,8 @@
  */
 package cz.compoundsearch.resources;
 
-import cz.compoundsearch.requests.AddRequest;
 import cz.compoundsearch.entities.Compound;
+import cz.compoundsearch.requests.AddRequest;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;

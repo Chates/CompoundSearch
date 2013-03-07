@@ -29,7 +29,7 @@ public class SubstructureFingerprintDescriptor implements ICompoundDescriptor {
 	    BitSet fingerprint = sf.getFingerprint(c.getAtomContainer());
 	    return new FingerprintDescriptorResult(fingerprint);
 	} catch (CDKException ex) {
-	    throw new CompoundSearchException("Unable to screen substructure presence CDK error.");
+	    throw new CompoundSearchException("Unable to make fingeprint of the Compound. CDK error.");
 	}
 
     }

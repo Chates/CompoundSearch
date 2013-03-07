@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType;
  * Resource can produce both JSON and XML formats based on "Accept" header in
  * HTTP request.
  * 
- * This resource is mapped to /id/ URL
+ * <p><strong>This resource is mapped to /id/ URL</strong></p>
  *
  * @author Martin Mates
  */
@@ -38,7 +38,7 @@ public class IdResource {
      * returned and header "Compound-search-error" is added to response 
      * explaining the error.
      * 
-     * Method is mapped to /id/{id} URL.
+     * <p><strong>This resource is mapped to /id/{id} URL</strong></p>
      *
      * @param	id ID of compound to look up in database
      * @return	ArrayList containing one compound

@@ -12,8 +12,6 @@ import cz.compoundsearch.results.SimilarityResult;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -23,7 +21,7 @@ public abstract class AbstractSimilarity implements ISimilarity {
 
     protected List<SimilarityResult> similarCompounds = new ArrayList<SimilarityResult>();
     protected Compound requestCompound;
-    protected Integer batchSize = 100;
+    protected Integer batchSize = 1000;
     protected Double treshold = 0.8;
     protected Integer numberOfResults = 1000;
 
@@ -44,6 +42,7 @@ public abstract class AbstractSimilarity implements ISimilarity {
 	    
 	    if (result.isEmpty()) {
 		// All compounds in this iteration were screened, continue to next iteration
+		start += this.batchSize;
 		continue;
 	    }
 
