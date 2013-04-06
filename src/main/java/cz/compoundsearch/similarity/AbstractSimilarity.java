@@ -20,14 +20,17 @@ import java.util.List;
 public abstract class AbstractSimilarity implements ISimilarity {
 
     protected List<SimilarityResult> similarCompounds = new ArrayList<SimilarityResult>();
-    protected Compound requestCompound;
+    protected ICompound requestCompound;
     protected Integer batchSize = 1000;
     protected Double treshold = 0.8;
-    protected Integer numberOfResults = 1000;
+    protected Integer numberOfResults = 100000;
 
     @Override
     public List<SimilarityResult> findAllSimilar() throws CompoundSearchException {
-
+	// Number of results cant be higher than 100 000
+	if (this.numberOfResults > 100000) {
+	    this.numberOfResults = 100000;
+	}	
 
 	// Postune brani sloucenin
 	Integer start = 0;
@@ -50,10 +53,10 @@ public abstract class AbstractSimilarity implements ISimilarity {
 	    Double currentSimilarity;
 	    for (ICompound c : result) {
 
-		currentSimilarity = calculateSimilarity(c.getCompound());
+		currentSimilarity = calculateSimilarity(c.getAtomContainer());
 		// Is similrity over the requested treshold?
 		if (currentSimilarity >= this.treshold) {
-		    similarCompounds.add(new SimilarityResult(c.getCompound().getId(), currentSimilarity));
+		    similarCompounds.add(new SimilarityResult(c.getId(), currentSimilarity));
 		}
 	    }
 
@@ -99,12 +102,12 @@ public abstract class AbstractSimilarity implements ISimilarity {
     }
 
     @Override
-    public Compound getRequestCompound() {
+    public ICompound getRequestCompound() {
 	return requestCompound;
     }
 
     @Override
-    public void setRequestCompound(Compound c) throws CompoundSearchException {
+    public void setRequestCompound(ICompound c) throws CompoundSearchException {
 	this.requestCompound = c;
     }
 }

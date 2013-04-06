@@ -42,11 +42,11 @@ public class Compound implements ICompound {
 	this.molfile = molfile;
     }
     
-    @Override
     public Compound getCompound() {
 	return this;
     }
 
+    @Override
     public Long getId() {
 	return id;
     }
@@ -79,6 +79,7 @@ public class Compound implements ICompound {
 	this.molfile = molfile;
     }
 
+    @Override
     public AtomContainer getAtomContainer() throws CompoundSearchException {
 	AtomContainer molecule;
 	
@@ -103,7 +104,4 @@ public class Compound implements ICompound {
 	return molecule;
     }
 
-    private void computePropertiesFromMolfile() {
-	// TODO: Tady by mohla byt metoda, ktera dopocita vsechno co komponenta potrebuje z molfilu
-    }
 }

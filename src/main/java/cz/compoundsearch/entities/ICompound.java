@@ -4,12 +4,16 @@
  */
 package cz.compoundsearch.entities;
 
+import cz.compoundsearch.exceptions.CompoundSearchException;
+import org.openscience.cdk.AtomContainer;
+
 /**
  *
  * @author Chates
  */
 public interface ICompound {
     
-    Compound getCompound();
+    public AtomContainer getAtomContainer() throws CompoundSearchException;
+    public Long getId();
     
 }

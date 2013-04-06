@@ -13,22 +13,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class SimilarityStatsResult {
 
-    private int numberOfResults;
+    private Long numberOfResults;
 
     // Because of the json/xml message writer
     public SimilarityStatsResult() {
 	
     }
     
-    public SimilarityStatsResult(int resultCount) {
+    public SimilarityStatsResult(Long resultCount) {
 	this.numberOfResults = resultCount;
     }
 
-    public int getResultCount() {
+    public Long getResultCount() {
 	return numberOfResults;
     }
 
-    public void setResultCount(int resultCount) {
+    public void setResultCount(Long resultCount) {
 	this.numberOfResults = resultCount;
     }
 

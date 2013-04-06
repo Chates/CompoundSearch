@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateful;
 import javax.ejb.StatefulTimeout;
@@ -51,6 +53,7 @@ public class SimilarityResource {
     @EJB
     private IdResource idResource;
     private List<SimilarityResult> savedSimilarityResults = new ArrayList<SimilarityResult>();
+    private ISimilarity usedSimilarity = null;
 
     /**
      * Returns all available similarities and their parameters
@@ -67,12 +70,12 @@ public class SimilarityResource {
 
 	for (ISimilarity s : similarities) {
 	    List<SimilarityParameter> parameters = new ArrayList<SimilarityParameter>();
-	    
+
 	    // Get all parameters for similarity
 	    String[] pNames = s.getParameterNames();
 	    // For each parameter get its type
 	    for (String pName : pNames) {
-		parameters.add(new SimilarityParameter(pName, s.getParameterType(pName).getClass().getSimpleName()));	
+		parameters.add(new SimilarityParameter(pName, s.getParameterType(pName).getClass().getSimpleName()));
 	    }
 	    result.add(new SimilarityInfoResult(s.getClass().getSimpleName(), parameters));
 	}
@@ -84,45 +87,44 @@ public class SimilarityResource {
     @Path("/")
     public SimilarityStatsResult universalSimilarity(JAXBElement<SimilarityRequest> sr) {
 	try {
-	    
+
 	    List<String> params = sr.getValue().getParameters();
 	    String requestedSimilarity = sr.getValue().getSimilarity();
 	    Compound requestCompound = new Compound(sr.getValue().getMolfile());
-	    
+
 	    // Get all similarities vie reflection
 	    Set<ISimilarity> similarities = this.getSimilaritiesReflection();
-	    
+
 	    // Find requested similarity in set 
-	    ISimilarity similarityToUse = null;
 	    for (ISimilarity s : similarities) {
 		if (s.getClass().getSimpleName().equals(requestedSimilarity)) {
-		    similarityToUse = s;
+		    this.usedSimilarity = s;
 		}
 	    }
-	    
+
 	    // Requested similarity was not found?
-	    if (similarityToUse == null) {
+	    if (this.usedSimilarity == null) {
 		CompoundResponse cr = new CompoundResponse("Requested similarity is not available.", 404);
 		throw new WebApplicationException(cr.buildResponse());
 	    }
-	    
+
 	    // Set similarity parameters
-	    similarityToUse.setRequestCompound(requestCompound);
-	    similarityToUse.setParameters(params);
-	    
+	    this.usedSimilarity.setRequestCompound(requestCompound);
+	    this.usedSimilarity.setParameters(params);
+
 	    // Get results
-	    List<SimilarityResult> similarityResults = similarityToUse.findAllSimilar();		    	
-	    
+	    List<SimilarityResult> similarityResults = this.usedSimilarity.findAllSimilar();
+
 	    // Is result empty?
 	    if (similarityResults.isEmpty()) {
 		CompoundResponse cr = new CompoundResponse("None compound is similar.", 404);
 		throw new WebApplicationException(cr.buildResponse());
 	    }
-	    
+
 	    // If not save results
 	    this.savedSimilarityResults = similarityResults;
 
-	    return new SimilarityStatsResult(this.savedSimilarityResults.size());
+	    return new SimilarityStatsResult(new Long(this.savedSimilarityResults.size()));
 	} catch (CompoundSearchException e) {
 	    CompoundResponse cr = new CompoundResponse(500, e);
 	    throw new WebApplicationException(cr.buildResponse());
@@ -130,36 +132,24 @@ public class SimilarityResource {
 
     }
     
-    
-//    @POST
-//    @Path("/substructure/")
-//    public List<SimilarityResult> substructureSimilarity(JAXBElement<SimilarityRequestXML> sr) {
-//	try {
-//	    Compound requestCompound = new Compound(sr.getValue().getMolfile());
-//	    SubstructureSimilarity ss = new SubstructureSimilarity(requestCompound);
-//
-//	    List<SimilarityResult> similarityResults = ss.findAllSimilar();
-//
-//	    if (similarityResults.isEmpty()) {
-//		CompoundResponse cr = new CompoundResponse("None compound is similar.", 404);
-//		throw new WebApplicationException(cr.buildResponse());
-//	    }
-//
-//	    return similarityResults;
-//	} catch (CompoundSearchException e) {
-//	    CompoundResponse cr = new CompoundResponse(500, e);
-//	    throw new WebApplicationException(cr.buildResponse());
-//	}
-//
-//    }
-
+    @GET
+    @Path("/count/")
+    public SimilarityStatsResult resultsCount() {
+	// Check wether there are some saved results 
+	if (this.savedSimilarityResults.isEmpty()) {
+	    CompoundResponse cr = new CompoundResponse("There are no stored results. You have to make search request first or your session has expired.", 404);
+	    throw new WebApplicationException(cr.buildResponse());
+	}
+	
+	return new SimilarityStatsResult(new Long(this.savedSimilarityResults.size()));
+    }
 
     @GET
     @Path("/{limit}/")
     public List<SimilarityCompoundResult> returnResults(@PathParam("limit") Integer limit) {
 	// Check wether there are some saved results 
 	if (this.savedSimilarityResults.isEmpty()) {
-	    CompoundResponse cr = new CompoundResponse("There are no stored results. You have to make search result first or your session has expired.", 404);
+	    CompoundResponse cr = new CompoundResponse("There are no stored results. You have to make search request first or your session has expired.", 404);
 	    throw new WebApplicationException(cr.buildResponse());
 	}
 
@@ -173,8 +163,14 @@ public class SimilarityResource {
 	List<SimilarityCompoundResult> returnResults = new ArrayList<SimilarityCompoundResult>();
 
 	// Go through saved similarity results and get compounds from DB
-	while (index < this.savedSimilarityResults.size() && returnResults.size() < limit) {
-	    Compound c = idResource.getCompoundById(this.savedSimilarityResults.get(index).getId()).get(0);
+	while (index < this.savedSimilarityResults.size() && returnResults.size() < limit) {	    
+	    Compound c;
+	    try {
+		c = this.usedSimilarity.getCompoundById(this.savedSimilarityResults.get(index).getId());
+	    } catch (CompoundSearchException e) {
+		CompoundResponse cr = new CompoundResponse(e.getMessage(), 404);
+		throw new WebApplicationException(cr.buildResponse());
+	    }
 	    Double s = this.savedSimilarityResults.get(index).getSimilarity();
 	    returnResults.add(new SimilarityCompoundResult(c, s));
 	    index++;
@@ -182,16 +178,16 @@ public class SimilarityResource {
 
 	return returnResults;
     }
-    
+
     @GET
-    @Path("/{start}/{limit}")
-    public List<SimilarityCompoundResult> returnResults(@PathParam("start") Integer start, @PathParam("limit") Integer limit) {
+    @Path("/{limit}/{start}")
+    public List<SimilarityCompoundResult> returnResults(@PathParam("limit") Integer limit, @PathParam("start") Integer start) {
 	// Check wether there are some saved results 
 	if (this.savedSimilarityResults.isEmpty()) {
 	    CompoundResponse cr = new CompoundResponse("There are no stored results. You have to make search result first or your session has expired.", 404);
 	    throw new WebApplicationException(cr.buildResponse());
 	}
-	
+
 	// Start is out of bounce
 	if (start > this.savedSimilarityResults.size() - 1) {
 	    CompoundResponse cr = new CompoundResponse("Start index for similarity result is out of bounce.", 404);
@@ -209,7 +205,13 @@ public class SimilarityResource {
 
 	// Go through saved similarity results and get compounds from DB
 	while (index < this.savedSimilarityResults.size() && returnResults.size() < limit) {
-	    Compound c = idResource.getCompoundById(this.savedSimilarityResults.get(index).getId()).get(0);
+	    Compound c;
+	    try {
+		c = this.usedSimilarity.getCompoundById(this.savedSimilarityResults.get(index).getId());
+	    } catch (CompoundSearchException e) {
+		CompoundResponse cr = new CompoundResponse(e.getMessage(), 404);
+		throw new WebApplicationException(cr.buildResponse());
+	    }
 	    Double s = this.savedSimilarityResults.get(index).getSimilarity();
 	    returnResults.add(new SimilarityCompoundResult(c, s));
 	    index++;

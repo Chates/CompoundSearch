@@ -9,6 +9,7 @@ import cz.compoundsearch.entities.Compound;
 import cz.compoundsearch.entities.SubstructureFingerprint;
 import cz.compoundsearch.exceptions.CompoundSearchException;
 import cz.compoundsearch.exceptions.NoMoreCompoundsException;
+import cz.compoundsearch.resources.IdResource;
 import cz.compoundsearch.resources.ListResource;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -16,6 +17,7 @@ import java.util.List;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.isomorphism.UniversalIsomorphismTester;
 
@@ -34,9 +36,9 @@ public class SubstructureSimilarity extends AbstractSimilarity {
     }
 
     @Override
-    public Double calculateSimilarity(Compound c) throws CompoundSearchException {
+    public Double calculateSimilarity(AtomContainer c) throws CompoundSearchException {
 	try {
-	    if (UniversalIsomorphismTester.isSubgraph(c.getAtomContainer(), this.requestCompound.getAtomContainer()) == true) {
+	    if (UniversalIsomorphismTester.isSubgraph(c, this.requestCompound.getAtomContainer()) == true) {
 		return 1.0;
 	    } else {
 		return 0.0;
@@ -62,7 +64,7 @@ public class SubstructureSimilarity extends AbstractSimilarity {
 
 	// Fingerprint of requested compound
 	SubstructureFingerprintDescriptor sfd = new SubstructureFingerprintDescriptor();
-	BitSet reqCompFingerprint = (BitSet) sfd.calculate(this.requestCompound).getValue();
+	BitSet reqCompFingerprint = (BitSet) sfd.calculate(this.requestCompound.getAtomContainer());
 	
 	// For each Compound perform screening
 	for (SubstructureFingerprint sf : sfResult) {
@@ -141,5 +143,28 @@ public class SubstructureSimilarity extends AbstractSimilarity {
 	sfResult = lr.getSubstructureFingerprint(limit, start);
 	
 	return sfResult;
+    }
+    
+    
+    @Override
+    public Compound getCompoundById(Long id) throws CompoundSearchException {
+	IdResource ir;		
+	List<Compound> irResult;
+	
+	try {
+	    Context context = new InitialContext();
+	    ir = (IdResource) context.lookup("java:module/IdResource");
+	    ir.setCalledFromApp(true);
+	} catch (NamingException e) {
+	    throw new CompoundSearchException("Database error in SubstructureSimilarity. Cannot obtain REST resources.");
+	}	
+	
+	irResult = ir.getCompoundById(id);
+	
+	if (irResult.isEmpty()) {
+	    throw new CompoundSearchException("Database error in SubstructureSimilarity. Cannot obtain compound with an ID " + id + ".");
+	}
+	
+	return irResult.get(0);
     }
 }

@@ -4,9 +4,9 @@
  */
 package cz.compoundsearch.descriptor;
 
-import cz.compoundsearch.descriptor.result.IDescriptorResult;
 import cz.compoundsearch.entities.Compound;
 import cz.compoundsearch.exceptions.CompoundSearchException;
+import org.openscience.cdk.AtomContainer;
 
 /**
  *
@@ -15,7 +15,7 @@ import cz.compoundsearch.exceptions.CompoundSearchException;
 public interface ICompoundDescriptor {
     
 
-    public IDescriptorResult calculate(Compound c) throws CompoundSearchException ;
+    public Object calculate(AtomContainer c) throws CompoundSearchException ;
      
     
 }

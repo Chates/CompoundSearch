@@ -18,7 +18,7 @@ import javax.ws.rs.core.MediaType;
  *
  * Resource can produce both JSON and XML formats based on "Accept" header in
  * HTTP request.
- * 
+ *
  * <p><strong>This resource is mapped to /id/ URL</strong></p>
  *
  * @author Martin Mates
@@ -30,14 +30,15 @@ public class IdResource {
 
     @PersistenceContext(unitName = "com.webtoad_Diplomka_maven_war_1.0PU")
     private EntityManager em;
+    private Boolean calledFromApp = false;
 
     /**
      * Search database for compound with a given ID.
      *
-     * If compound is not found response with status 404 (Not found) is
-     * returned and header "Compound-search-error" is added to response 
-     * explaining the error.
-     * 
+     * If compound is not found response with status 404 (Not found) is returned
+     * and header "Compound-search-error" is added to response explaining the
+     * error.
+     *
      * <p><strong>This resource is mapped to /id/{id} URL</strong></p>
      *
      * @param	id ID of compound to look up in database
@@ -48,15 +49,34 @@ public class IdResource {
     public List<Compound> getCompoundById(@PathParam("id") Long id) {
 	Compound c = em.find(Compound.class, id);
 
-	if (c == null) {
+	if (c == null && this.calledFromApp == false) {
 	    CompoundResponse crf = new CompoundResponse("Compound with a given ID was not found.", 404);
 	    throw new WebApplicationException(crf.buildResponse());
 	}
 
 	// ArrayList because of data consistency in response mapped to JSON {"compound":[{}]} or {"compound":{"id"}}
 	List<Compound> returnValue = new ArrayList<Compound>();
-	returnValue.add(c);
 
-	return returnValue;
+	// When result is empty return empty list
+	if (c == null) {
+	    return returnValue;
+	} else {
+	    returnValue.add(c);
+	    return returnValue;
+	}
+
+
+    }
+
+    /**
+     * Parameter to determine whether this resource is called from within an
+     * application or from HTTP request.
+     *
+     * Defaults to false (called from client as web service)
+     *
+     * Resource react differently for empty results from database.
+     */
+    public void setCalledFromApp(Boolean b) {
+	this.calledFromApp = b;
     }
 }

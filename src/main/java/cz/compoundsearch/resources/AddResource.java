@@ -4,11 +4,15 @@
  */
 package cz.compoundsearch.resources;
 
+import cz.compoundsearch.descriptor.SubstructureFingerprintDescriptor;
 import cz.compoundsearch.entities.Compound;
+import cz.compoundsearch.entities.SubstructureFingerprint;
+import cz.compoundsearch.exceptions.CompoundSearchException;
 import cz.compoundsearch.requests.AddRequest;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.BitSet;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -40,7 +44,6 @@ public class AddResource {
 
     @PersistenceContext(unitName = "com.webtoad_Diplomka_maven_war_1.0PU")
     private EntityManager em;
-    
     @Context
     private UriInfo uriInfo;
 
@@ -64,14 +67,27 @@ public class AddResource {
 	    // Molecular formula
 	    MolecularFormula molForm = (MolecularFormula) MolecularFormulaManipulator.getMolecularFormula(molecule);
 	    compoundToAdd.setMolecularFormula(MolecularFormulaManipulator.getString(molForm));
-	    
-	    em.persist(compoundToAdd);
 
+
+	    // Generate substructure fingerprint
+	    SubstructureFingerprint sf = new SubstructureFingerprint();
+	    SubstructureFingerprintDescriptor sfd = new SubstructureFingerprintDescriptor();
+	    BitSet idr;
+	    try {
+		idr = sfd.calculate(compoundToAdd.getAtomContainer());
+	    } catch (CompoundSearchException e) {
+		throw new WebApplicationException(Response.status(500).entity("Adding new compound to database failed.").build());
+	    }
+	    sf.setCompound(compoundToAdd);
+	    sf.setFingerprint(idr);
+
+	    em.persist(compoundToAdd);
+	    em.persist(sf);
 
 	} catch (Exception e) {
 	    throw new WebApplicationException(Response.serverError().build());
 	}
-	
+
 	URI compoundUri = uriInfo.getBaseUriBuilder().path("/id/" + compoundToAdd.getId().toString()).build();
 	return Response.created(compoundUri).build();
 

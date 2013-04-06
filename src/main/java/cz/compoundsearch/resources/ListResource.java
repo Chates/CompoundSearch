@@ -2,6 +2,7 @@ package cz.compoundsearch.resources;
 
 import cz.compoundsearch.entities.Compound;
 import cz.compoundsearch.entities.SubstructureFingerprint;
+import cz.compoundsearch.results.SimilarityStatsResult;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -75,6 +76,19 @@ public class ListResource {
 	return list;
     }
 
+    @GET
+    @Path("/count/")
+    public SimilarityStatsResult getCompoundCount() {
+	CriteriaBuilder builder = em.getCriteriaBuilder();
+	CriteriaQuery<Long> cq = builder.createQuery(Long.class);
+	cq.select(builder.count(cq.from(Compound.class)));
+	em.createQuery(cq);
+	Long count = em.createQuery(cq).getSingleResult();
+
+	SimilarityStatsResult ssr = new SimilarityStatsResult(count);
+	return ssr;
+    }
+
     /**
      * Return specified number of compounds from database.
      *
@@ -140,7 +154,7 @@ public class ListResource {
     }
 
     /**
-     * Used by {@link cz.compoundsearch.similarity.SubstructureSimilarity} and 
+     * Used by {@link cz.compoundsearch.similarity.SubstructureSimilarity} and
      * {@link cz.compoundsearch.descriptor.SubstructureFingerprintDescriptor} to
      * retrieve compounds with SubstructureFingeprint descriptor value.
      *

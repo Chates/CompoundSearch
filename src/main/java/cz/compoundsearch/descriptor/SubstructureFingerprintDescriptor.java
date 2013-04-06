@@ -4,11 +4,10 @@
  */
 package cz.compoundsearch.descriptor;
 
-import cz.compoundsearch.descriptor.result.FingerprintDescriptorResult;
-import cz.compoundsearch.descriptor.result.IDescriptorResult;
 import cz.compoundsearch.entities.Compound;
 import cz.compoundsearch.exceptions.CompoundSearchException;
 import java.util.BitSet;
+import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fingerprint.SubstructureFingerprinter;
 
@@ -22,12 +21,11 @@ public class SubstructureFingerprintDescriptor implements ICompoundDescriptor {
     }
 
     @Override
-    public IDescriptorResult calculate(Compound c) throws CompoundSearchException {
+    public BitSet calculate(AtomContainer c) throws CompoundSearchException {
 	SubstructureFingerprinter sf = new SubstructureFingerprinter();
 
 	try {
-	    BitSet fingerprint = sf.getFingerprint(c.getAtomContainer());
-	    return new FingerprintDescriptorResult(fingerprint);
+	    return sf.getFingerprint(c);
 	} catch (CDKException ex) {
 	    throw new CompoundSearchException("Unable to make fingeprint of the Compound. CDK error.");
 	}

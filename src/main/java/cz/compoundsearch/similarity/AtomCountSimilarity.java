@@ -6,15 +6,16 @@ package cz.compoundsearch.similarity;
 
 import cz.compoundsearch.descriptor.AtomCountDescriptor;
 import cz.compoundsearch.descriptor.ICompoundDescriptor;
-import cz.compoundsearch.descriptor.result.IDescriptorResult;
 import cz.compoundsearch.entities.Compound;
 import cz.compoundsearch.entities.ICompound;
 import cz.compoundsearch.exceptions.CompoundSearchException;
+import cz.compoundsearch.resources.IdResource;
 import cz.compoundsearch.resources.ListResource;
 import java.util.List;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import org.openscience.cdk.AtomContainer;
 
 /**
  *
@@ -23,13 +24,13 @@ import javax.naming.NamingException;
 public class AtomCountSimilarity extends AbstractSimilarity {
 
     private ICompoundDescriptor atomCountDescriptor;
-    private IDescriptorResult acdRequestResult;
+    private Integer acdRequestResult;
 
     public AtomCountSimilarity(Compound requestCompound) throws CompoundSearchException {
 	this.requestCompound = requestCompound;
 
 	this.atomCountDescriptor = new AtomCountDescriptor();
-	this.acdRequestResult = this.atomCountDescriptor.calculate(this.requestCompound);
+	this.acdRequestResult = (Integer) this.atomCountDescriptor.calculate(this.requestCompound.getAtomContainer());
     }
 
     public AtomCountSimilarity() {
@@ -37,13 +38,13 @@ public class AtomCountSimilarity extends AbstractSimilarity {
     }
 
     @Override
-    public void setRequestCompound(Compound c) throws CompoundSearchException {
+    public void setRequestCompound(ICompound c) throws CompoundSearchException {
 	this.requestCompound = c;
-	this.acdRequestResult = this.atomCountDescriptor.calculate(this.requestCompound);
+	this.acdRequestResult = (Integer) this.atomCountDescriptor.calculate(this.requestCompound.getAtomContainer());
     }
 
     @Override
-    public Double calculateSimilarity(Compound c) throws CompoundSearchException {
+    public Double calculateSimilarity(AtomContainer c) throws CompoundSearchException {
 	Integer requestAtoms = Integer.parseInt(this.acdRequestResult.toString());
 	Integer compoundFromDBAtoms = Integer.parseInt(this.atomCountDescriptor.calculate(c).toString());
 
@@ -126,5 +127,28 @@ public class AtomCountSimilarity extends AbstractSimilarity {
 	result = lr.getCompounds(limit, start);
 
 	return result;
+    }
+    
+    
+    @Override
+    public Compound getCompoundById(Long id) throws CompoundSearchException {
+	IdResource ir;		
+	List<Compound> irResult;
+	
+	try {
+	    Context context = new InitialContext();
+	    ir = (IdResource) context.lookup("java:module/IdResource");
+	    ir.setCalledFromApp(true);
+	} catch (NamingException e) {
+	    throw new CompoundSearchException("Database error in SubstructureSimilarity. Cannot obtain REST resources.");
+	}	
+	
+	irResult = ir.getCompoundById(id);
+	
+	if (irResult.isEmpty()) {
+	    throw new CompoundSearchException("Database error in SubstructureSimilarity. Cannot obtain compound with an ID " + id + ".");
+	}
+	
+	return irResult.get(0);
     }
 }

@@ -4,8 +4,6 @@
  */
 package cz.compoundsearch.descriptor;
 
-import cz.compoundsearch.descriptor.result.IDescriptorResult;
-import cz.compoundsearch.descriptor.result.IntegerDescriptorResult;
 import cz.compoundsearch.entities.Compound;
 import cz.compoundsearch.exceptions.CompoundSearchException;
 import org.openscience.cdk.AtomContainer;
@@ -21,17 +19,17 @@ public class AtomCountDescriptor implements ICompoundDescriptor {
     }
 
     @Override
-    public IDescriptorResult calculate(Compound c) throws CompoundSearchException {
+    public Integer calculate(AtomContainer c) throws CompoundSearchException {
 	DescriptorValue dValue;
 
-	AtomContainer molecule = c.getAtomContainer();
+	AtomContainer molecule = c;
 
 
 	org.openscience.cdk.qsar.descriptors.molecular.AtomCountDescriptor acd = new org.openscience.cdk.qsar.descriptors.molecular.AtomCountDescriptor();
 	dValue = acd.calculate(molecule);
 
 
-	return new IntegerDescriptorResult(Integer.parseInt(dValue.getValue().toString()));
+	return Integer.parseInt(dValue.getValue().toString());
 
     }
 }
