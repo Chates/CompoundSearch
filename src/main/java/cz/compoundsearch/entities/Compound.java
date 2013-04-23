@@ -16,6 +16,8 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.io.MDLV2000Reader;
 
 /**
+ * Implementation of the ICompound interface and database entity at the same
+ * time.
  *
  * @author Martin Mates
  */
@@ -41,48 +43,100 @@ public class Compound implements ICompound {
     public Compound(String molfile) {
 	this.molfile = molfile;
     }
-    
+
+    /**
+     * Getter for compound.
+     *
+     * @return Compound
+     */
     public Compound getCompound() {
 	return this;
     }
 
+    /**
+     * Getter for compound ID.
+     *
+     * @return Long ID of the compound in specific repository or database
+     */
     @Override
     public Long getId() {
 	return id;
     }
 
+    /**
+     * Setter for compound ID.
+     * 
+     * @param id ID of the compound in specific repository of database
+     */
+    @Override
     public void setId(Long id) {
 	this.id = id;
     }
 
+    /**
+     * Getter for molecular formula of this compound.
+     * 
+     * @return String
+     */
     public String getMolecularFormula() {
 	return molecularFormula;
     }
 
+    /**
+     * Setter for molecular formula.
+     * 
+     * @param molecularFormula 
+     */
     public void setMolecularFormula(String molecularFormula) {
 	this.molecularFormula = molecularFormula;
     }
 
+    /**
+     * Getter for SMILES line notation of this chemical compound.
+     * 
+     * @return String SMILES line notation
+     */
     public String getSmiles() {
 	return smiles;
     }
 
+    /**
+     * Setter for SMILES line notation of the chemical compound.
+     * 
+     * @param smiles SMILES line notation
+     */
     public void setSmiles(String smiles) {
 	this.smiles = smiles;
     }
 
+    /**
+     * Getter for SDF molfile format of this compound.
+     * 
+     * @return String SDF molfile 
+     */
     public String getMolfile() {
 	return molfile;
     }
 
+    /**
+     * Setter for SDF molfile format of this compound.
+     * 
+     * @param molfile String SDF molfile 
+     */
     public void setMolfile(String molfile) {
 	this.molfile = molfile;
     }
 
+    /**
+     * Getter for AtomContainer.
+     * 
+     * @return AtomContainer Representation of the chemical molecule in CDK library
+     * @throws CompoundSearchException 
+     */
     @Override
     public AtomContainer getAtomContainer() throws CompoundSearchException {
 	AtomContainer molecule;
-	
+
 	// If Compound doesnt have molfile throw an exception
 	if (this.molfile != null) {
 	    try {
@@ -103,5 +157,4 @@ public class Compound implements ICompound {
 
 	return molecule;
     }
-
 }

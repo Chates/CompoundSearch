@@ -1,20 +1,22 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cz.compoundsearch.descriptor;
 
-import cz.compoundsearch.entities.Compound;
 import cz.compoundsearch.exceptions.CompoundSearchException;
 import org.openscience.cdk.AtomContainer;
 
 /**
- *
- * @author Chates
+ * Interface for all further descriptors.
+ * 
+ * @author Martin Mates
  */
 public interface ICompoundDescriptor {
     
-
+    /**
+     * This method is used for descriptor calculations and may return any type.
+     * 
+     * @param c Molecule from which the descriptor is calculated
+     * @return Object Computed value of the descriptor
+     * @throws CompoundSearchException 
+     */
     public Object calculate(AtomContainer c) throws CompoundSearchException ;
      
     

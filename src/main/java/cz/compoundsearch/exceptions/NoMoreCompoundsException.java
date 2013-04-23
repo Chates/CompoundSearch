@@ -1,12 +1,12 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cz.compoundsearch.exceptions;
 
 /**
- *
- * @author Chates
+ * Exception indicating the end of similarity searching algorithm.
+ * 
+ * End of default algorithm implemented in {@link cz.compoundsearch.similarity.AbstractSimilarity} happens when every 
+ * compound in database is inspected and there are none left.
+ * 
+ * @author Martin Mates
  */
 public class NoMoreCompoundsException extends Exception {
 

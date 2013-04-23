@@ -1,12 +1,12 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cz.compoundsearch.exceptions;
 
 /**
- *
- * @author Chates
+ * Exception indicating an error during similarity searching or working with 
+ * chemicals.
+ * 
+ * This exception is usually mapped to 500 o 404 HTTP response.
+ * 
+ * @author Martin Mates
  */
 public class CompoundSearchException extends Exception {
 

@@ -1,11 +1,8 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cz.compoundsearch.similarity;
 
 import cz.compoundsearch.descriptor.SubstructureFingerprintDescriptor;
 import cz.compoundsearch.entities.Compound;
+import cz.compoundsearch.entities.ICompound;
 import cz.compoundsearch.entities.SubstructureFingerprint;
 import cz.compoundsearch.exceptions.CompoundSearchException;
 import cz.compoundsearch.exceptions.NoMoreCompoundsException;
@@ -23,18 +20,43 @@ import org.openscience.cdk.isomorphism.UniversalIsomorphismTester;
 
 /**
  *
- * @author Chates
+ * @author Martin Mates
  */
 public class SubstructureSimilarity extends AbstractSimilarity {
 
-    public SubstructureSimilarity(Compound requestCompound) {
+    /**
+     * Constructor accepting the query compound.
+     * 
+     * Threshold is set automatically to 1.0 because there may be only true/false
+     * result.
+     * 
+     * @param requestCompound 
+     */
+    public SubstructureSimilarity(ICompound requestCompound) {
 	this.requestCompound = requestCompound;
-	this.treshold = 1.0;
+	this.threshold = 1.0;
     }
 
+    /**
+     * Default constructor.
+     * 
+     * Threshold is set automatically to 1.0 because there may be only true/false
+     * result.
+     */
     public SubstructureSimilarity() {
+	this.threshold = 1.0;
     }
 
+    /**
+     * Computation of the similarity between current and query molecule.
+     * 
+     * Method tests graph isomorphism using UniversalIsomorphismTester in CDK 
+     * library.
+     * 
+     * @param c Molecule represented as AtomContainer from CDK library
+     * @return Double Computed similarity between two molecules
+     * @throws CompoundSearchException
+     */
     @Override
     public Double calculateSimilarity(AtomContainer c) throws CompoundSearchException {
 	try {
@@ -48,6 +70,23 @@ public class SubstructureSimilarity extends AbstractSimilarity {
 	}
     }
 
+    /**
+     * Implementation of the screening procedure.
+     * 
+     * Screening is done by comparison of two fingerprints. These fingerprints 
+     * consist of a sequence of “0”s and “1s”. A “1” in a fingerprint usually 
+     * indicates the presence of a particular structural feature and a “0” 
+     * its absence. Thus if a feature is present in the substructure 
+     * (there is a “1” in its fingerprint) but not in the query molecule (the 
+     * corresponding value is “0”) then it can be readily determined from the 
+     * fingerprint comparison that the molecule cannot contain the substructure. 
+     * 
+     * @param start
+     * @param limit
+     * @return List<Compound> List of compounds that passed the screening procedure
+     * @throws CompoundSearchException
+     * @throws NoMoreCompoundsException 
+     */
     @Override
     public List<Compound> screen(Integer start, Integer limit) throws CompoundSearchException, NoMoreCompoundsException {
 	// Result of the screening
@@ -84,6 +123,13 @@ public class SubstructureSimilarity extends AbstractSimilarity {
 	
     }
 
+    /**
+     * This is a setter for similarity parameters and place where parameter 
+     * validation is implemented.
+     * 
+     * @param parameters List of parameters
+     * @throws CompoundSearchException 
+     */
     @Override
     public void setParameters(List<String> parameters) throws CompoundSearchException {
 	if (parameters.size() != 1) {
@@ -100,6 +146,13 @@ public class SubstructureSimilarity extends AbstractSimilarity {
 	}
     }
 
+    /**
+     * Getter for similarity parameters.
+     * 
+     * Returns array of type Object since the parameters may be of any type.
+     * 
+     * @return Object[] Array of similarity parameters
+     */
     @Override
     public Object[] getParameters() {
 	Object[] parameters = new Object[1];
@@ -108,6 +161,13 @@ public class SubstructureSimilarity extends AbstractSimilarity {
 	return parameters;
     }
 
+    /**
+     * Getter returning parameter names. 
+     * 
+     * This is needed for client asking similarity parameters definition.
+     * 
+     * @return String[] Array of parameter names
+     */
     @Override
     public String[] getParameterNames() {
 	String[] names = new String[1];
@@ -116,6 +176,14 @@ public class SubstructureSimilarity extends AbstractSimilarity {
 	return names;
     }
 
+    /**
+     * This method accepts name of the parameter and returns its type. 
+     * 
+     * This is needed for client asking similarity parameters definition.
+     * 
+     * @param name Name of the parameter
+     * @return Object Instance of the same type as parameter of the given name
+     */
     @Override
     public Object getParameterType(String name) {
 	if (name.equals("numberOfResults")) {
@@ -125,6 +193,18 @@ public class SubstructureSimilarity extends AbstractSimilarity {
 	return null;
     }
 
+    /**
+     * Compound retrieval from database.
+     * 
+     * Method calls an existing REST web service that has method for compound 
+     * retrieval. We will obtain a reference to this resource form context of 
+     * Java application container. 
+     * 
+     * @param start
+     * @param limit
+     * @return List<? extends ICompound> List of compound from database
+     * @throws CompoundSearchException 
+     */
     @Override
     public List<SubstructureFingerprint> getCompounds(Integer start, Integer limit) throws CompoundSearchException {
 	ListResource lr;
@@ -146,6 +226,17 @@ public class SubstructureSimilarity extends AbstractSimilarity {
     }
     
     
+    /**
+     * Returns compound with a given id from database.
+     * 
+     * Method calls an existing REST web service that has method for compound 
+     * retrieval. We will obtain a reference to this resource form context of 
+     * Java application container. 
+     * 
+     * @param id Identification number of the compound to be searched
+     * @return ICompound Compound from database
+     * @throws CompoundSearchException 
+     */
     @Override
     public Compound getCompoundById(Long id) throws CompoundSearchException {
 	IdResource ir;		

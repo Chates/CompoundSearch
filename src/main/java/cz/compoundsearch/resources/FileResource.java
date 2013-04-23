@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cz.compoundsearch.resources;
 
 import cz.compoundsearch.descriptor.SubstructureFingerprintDescriptor;
@@ -35,14 +31,13 @@ import org.openscience.cdk.io.IChemObjectReader.Mode;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV2000Writer;
 import org.openscience.cdk.smiles.SmilesGenerator;
-import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
 /**
  *
- * @author Chates
+ * @author Martin Mates
  */
 @Path("/file/")
 @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -68,7 +63,7 @@ public class FileResource {
 	int counter = 0;
 	int start = 0;
 	while ((sdfCurrentLine = br.readLine()) != null) {
-	    // $$$$ marks end of molecule in SDF files if so save molecue to database
+	    // $$$$ marks end of molecule in SDF files
 	    if (sdfCurrentLine.equals("$$$$")) {
 		counter++;
 		if (counter < start) {
@@ -165,12 +160,6 @@ public class FileResource {
 		sdfMolecule += sdfCurrentLine + "\n";
 	    }
 	}
-
-
-	// TODO: Generovani InChi kodu nefunguje, ale mohlo by fungovat na jine platforme
-//	    InChIGeneratorFactory factory = InChIGeneratorFactory.getInstance();
-//	    InChIGenerator generator = factory.getInChIGenerator(containersList.get(0));
-//	    String inchi = generator.getInchi();
 
 
 

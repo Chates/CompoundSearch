@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cz.compoundsearch.resources;
 
 import cz.compoundsearch.entities.Compound;
@@ -17,8 +13,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateful;
 import javax.ejb.StatefulTimeout;
@@ -37,8 +31,23 @@ import javax.xml.bind.JAXBElement;
 import org.reflections.Reflections;
 
 /**
+ * Universal REST resource for all similarity requests.
  *
- * @author Chates
+ * This class serves as an universal resource for all similarity requests. It 
+ * provides information about available similarities and their parameters.
+ * 
+ * This resource is stateful which means that it will "live" in the session and 
+ * is paired with the specific client with session ID. Session expires in 10 
+ * minutes.
+ * 
+ * This class also keeps the search results and provide them to the client.
+ * 
+ * Resource can produce both JSON and XML formats based on "Accept" header in
+ * HTTP request.
+ *
+ * <p><strong>This resource is mapped to /similarity/ URL</strong></p>
+ *
+ * @author Martin Mates
  */
 @SessionScoped
 @Path("/similarity/")
@@ -56,9 +65,15 @@ public class SimilarityResource {
     private ISimilarity usedSimilarity = null;
 
     /**
-     * Returns all available similarities and their parameters
+     * Returns information about all available similarities and their parameters.
+     * 
+     * This method use reflection and looks for all classes implementing 
+     * ISimilarity interface.
+     * 
+     * <p><strong>Method is mapped to /similarity/info/ URL.</strong></p>
      *
-     * @return
+     * @return List<SimilarityInfoResult> XML/JSON mapped object with 
+     * information about available similarities
      */
     @GET
     @Path("/info/")
@@ -83,6 +98,26 @@ public class SimilarityResource {
 	return result;
     }
 
+    /**
+     * Method accepting similarity request.
+     * 
+     * This method serves all requests for similarity searching. It validates 
+     * the request, set parameters, run the similarity and returns information
+     * about searching result.
+     * 
+     * If required similarity is not found HTTP status 404 is returned with 
+     * corresponding error message in custom header. If any other error occurs 
+     * HTTP status 500 is returned.
+     * 
+     * If the searching is successful. Results are saved in private variable and
+     * can be retrieved by the client later.
+     * 
+     * <p><strong>Method is mapped to /similarity/ URL.</strong></p>
+     * 
+     * @param sr Similarity request object
+     * @return SimilarityStatsResult Information about the search result 
+     * containing number of results.
+     */
     @POST
     @Path("/")
     public SimilarityStatsResult universalSimilarity(JAXBElement<SimilarityRequest> sr) {
@@ -132,6 +167,17 @@ public class SimilarityResource {
 
     }
     
+    /**
+     * Returns number of results returned in last similarity search.
+     * 
+     * If there is no previous similarity or session has expired 404 HTTP code
+     * is returned.
+     * 
+     * <p><strong>Method is mapped to /similarity/count/ URL.</strong></p>
+     * 
+     * @return SimilarityStatsResult Information about the search result 
+     * containing number of results.
+     */
     @GET
     @Path("/count/")
     public SimilarityStatsResult resultsCount() {
@@ -144,6 +190,24 @@ public class SimilarityResource {
 	return new SimilarityStatsResult(new Long(this.savedSimilarityResults.size()));
     }
 
+    /**
+     * Returns actual results of the previous similarity searching.
+     * 
+     * In the same session user can query the results by calling this resource.
+     * This method then retrieve compounds from database using current 
+     * similarity that was used for searching.
+     * 
+     * If there are no results or session has expired 404 HTTP status is 
+     * returned.
+     * 
+     * This method also validates given parameters. Maximum number of results to 
+     * return is limited to 1000 due to HTTP transfer overload.
+     * 
+     * <p><strong>Method is mapped to /similarity/{limit} URL.</strong></p>
+     * 
+     * @param limit
+     * @return 
+     */
     @GET
     @Path("/{limit}/")
     public List<SimilarityCompoundResult> returnResults(@PathParam("limit") Integer limit) {
@@ -166,7 +230,7 @@ public class SimilarityResource {
 	while (index < this.savedSimilarityResults.size() && returnResults.size() < limit) {	    
 	    Compound c;
 	    try {
-		c = this.usedSimilarity.getCompoundById(this.savedSimilarityResults.get(index).getId());
+		c = (Compound) this.usedSimilarity.getCompoundById(this.savedSimilarityResults.get(index).getId());
 	    } catch (CompoundSearchException e) {
 		CompoundResponse cr = new CompoundResponse(e.getMessage(), 404);
 		throw new WebApplicationException(cr.buildResponse());
@@ -179,6 +243,27 @@ public class SimilarityResource {
 	return returnResults;
     }
 
+    /**
+     * Returns actual results of the previous similarity searching.
+     * 
+     * In the same session user can query the results by calling this resource.
+     * This method then retrieve compounds from database using current 
+     * similarity that was used for searching.
+     * 
+     * If there are no results or session has expired 404 HTTP status is 
+     * returned.
+     * 
+     * This method also validates given parameters. Maximum number of results to 
+     * return is limited to 1000 due to HTTP transfer overload.
+     * 
+     * This method is usually used when paginating the results. 
+     * 
+     * <p><strong>Method is mapped to /similarity/{limit}/{start} URL.</strong></p>
+     * 
+     * @param limit
+     * @param start
+     * @return 
+     */
     @GET
     @Path("/{limit}/{start}")
     public List<SimilarityCompoundResult> returnResults(@PathParam("limit") Integer limit, @PathParam("start") Integer start) {
@@ -207,7 +292,7 @@ public class SimilarityResource {
 	while (index < this.savedSimilarityResults.size() && returnResults.size() < limit) {
 	    Compound c;
 	    try {
-		c = this.usedSimilarity.getCompoundById(this.savedSimilarityResults.get(index).getId());
+		c = (Compound) this.usedSimilarity.getCompoundById(this.savedSimilarityResults.get(index).getId());
 	    } catch (CompoundSearchException e) {
 		CompoundResponse cr = new CompoundResponse(e.getMessage(), 404);
 		throw new WebApplicationException(cr.buildResponse());
@@ -220,6 +305,13 @@ public class SimilarityResource {
 	return returnResults;
     }
 
+    /**
+     * Helper method for reflection searching for all classes implementing 
+     * {@link cz.compoundsearch.similarity.ISimilarity} interface omitting 
+     * {@link cz.compoundsearch.similarity.AbstractSimilarity}.
+     * 
+     * @return Set<ISimilarity> Instances of all available similarities
+     */
     private Set<ISimilarity> getSimilaritiesReflection() {
 	// Get all available Similarities via reflection
 	Reflections reflections = new Reflections("cz.compoundsearch.similarity");

@@ -1,10 +1,5 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cz.compoundsearch.similarity;
 
-import cz.compoundsearch.entities.Compound;
 import cz.compoundsearch.entities.ICompound;
 import cz.compoundsearch.exceptions.CompoundSearchException;
 import cz.compoundsearch.exceptions.NoMoreCompoundsException;
@@ -14,17 +9,26 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- *
- * @author Chates
+ * This class defines default functionality for other similarities and 
+ * implements algorithm for finding similar structures in database. 
+ * 
+ * @author Martin Mates
  */
 public abstract class AbstractSimilarity implements ISimilarity {
 
     protected List<SimilarityResult> similarCompounds = new ArrayList<SimilarityResult>();
     protected ICompound requestCompound;
     protected Integer batchSize = 1000;
-    protected Double treshold = 0.8;
+    protected Double threshold = 0.8;
     protected Integer numberOfResults = 100000;
 
+    /**
+     * Implementation of the default algorithm for similarity searching.
+     * 
+     * @return List<SimilarityResult> List of similarity results sorted by 
+     * similarity
+     * @throws CompoundSearchException 
+     */
     @Override
     public List<SimilarityResult> findAllSimilar() throws CompoundSearchException {
 	// Number of results cant be higher than 100 000
@@ -55,7 +59,7 @@ public abstract class AbstractSimilarity implements ISimilarity {
 
 		currentSimilarity = calculateSimilarity(c.getAtomContainer());
 		// Is similrity over the requested treshold?
-		if (currentSimilarity >= this.treshold) {
+		if (currentSimilarity >= this.threshold) {
 		    similarCompounds.add(new SimilarityResult(c.getId(), currentSimilarity));
 		}
 	    }
@@ -68,8 +72,8 @@ public abstract class AbstractSimilarity implements ISimilarity {
 	    // fit to number of results.
 	    if (similarCompounds.size() > numberOfResults) {
 		Double lastReturnedSimilarity = similarCompounds.get(numberOfResults - 1).getSimilarity();
-		if (lastReturnedSimilarity > this.treshold) {
-		    this.treshold = lastReturnedSimilarity;
+		if (lastReturnedSimilarity > this.threshold) {
+		    this.threshold = lastReturnedSimilarity;
 		}
 
 		// Cut sorted list to requested size. Saving memory keeping only best results
@@ -82,6 +86,22 @@ public abstract class AbstractSimilarity implements ISimilarity {
 	return similarCompounds;
     }
 
+    /**
+     * Implementation of the default screening.
+     * 
+     * This screening does nothing only retrieve compounds from database and 
+     * returns them all.
+     * 
+     * Implemented in AbstractSimilarity so the programmer can omit 
+     * implementation of screening in their similarity.
+     * 
+     * @param start
+     * @param limit
+     * @return List<? extends ICompound> List of compounds that passed the screening
+     * procedure
+     * @throws CompoundSearchException
+     * @throws NoMoreCompoundsException 
+     */
     @Override
     public List<? extends ICompound> screen(Integer start, Integer limit) throws CompoundSearchException, NoMoreCompoundsException {
 	List<? extends ICompound> result = this.getCompounds(start, limit);
@@ -93,19 +113,46 @@ public abstract class AbstractSimilarity implements ISimilarity {
 	return result;
     }
 
+    /**
+     * Getter for batch size.
+     * 
+     * For memory consumption reasons compounds are retrieved from database in 
+     * batches.
+     * 
+     * @return 
+     */
     public Integer getBatchSize() {
 	return batchSize;
     }
 
+    /**
+     * Setter for batch size.
+     * 
+     * For memory consumption reasons compounds are retrieved from database in 
+     * batches.
+     * 
+     * @param batchSize Size of the batch for compound retrieval
+     */
     public void setBatchSize(Integer batchSize) {
 	this.batchSize = batchSize;
     }
 
+    /**
+     * Getter for query compound.
+     * 
+     * @return ICompound Query compound implementing ICompound interface
+     */
     @Override
     public ICompound getRequestCompound() {
 	return requestCompound;
     }
 
+    /**
+     * Setter for query compound.
+     * 
+     * @param c Query compound implementing ICompound interface
+     * @throws CompoundSearchException 
+     */
     @Override
     public void setRequestCompound(ICompound c) throws CompoundSearchException {
 	this.requestCompound = c;

@@ -1,7 +1,7 @@
 package cz.compoundsearch.similarity;
 
-import cz.compoundsearch.descriptor.AtomCountDescriptor;
 import cz.compoundsearch.descriptor.ICompoundDescriptor;
+import cz.compoundsearch.descriptor.MolWeightDescriptor;
 import cz.compoundsearch.entities.Compound;
 import cz.compoundsearch.entities.ICompound;
 import cz.compoundsearch.exceptions.CompoundSearchException;
@@ -14,70 +14,72 @@ import javax.naming.NamingException;
 import org.openscience.cdk.AtomContainer;
 
 /**
- * Similarity based on number of atoms in molecule.
- *
+ * Similarity based on molecular weights.
+ * 
  * @author Martin Mates
  */
-public class AtomCountSimilarity extends AbstractSimilarity {
+public class MolWeightSimilarity extends AbstractSimilarity {
 
-    private ICompoundDescriptor atomCountDescriptor;
-    private Integer acdRequestResult;
+    // Descriptor for molecular weight retrieval
+    private ICompoundDescriptor molWeightDescriptor;
+    // Result of the molecular weight descriptor
+    private Double mwdRequestResult;
 
     /**
-     * Constructor accepting the query compound.
-     *
-     * AtomCount descriptor is initialized and computed for query molecule.
-     *
-     * @param requestCompound
-     * @throws CompoundSearchException
+     * Constructor for MolWeightSimilarity with request compound specified.
+     * 
+     * Descriptor is initialized and performed on the request compound.  
+     * 
+     * @param c Requested compound from client
+     * @throws CompoundSearchException 
      */
-    public AtomCountSimilarity(ICompound requestCompound) throws CompoundSearchException {
-	this.requestCompound = requestCompound;
+    public MolWeightSimilarity(ICompound c) throws CompoundSearchException {
+	this.requestCompound = c;
 
-	this.atomCountDescriptor = new AtomCountDescriptor();
-	this.acdRequestResult = (Integer) this.atomCountDescriptor.calculate(this.requestCompound.getAtomContainer());
+	this.molWeightDescriptor = new MolWeightDescriptor();
+	this.mwdRequestResult = (Double) this.molWeightDescriptor.calculate(this.requestCompound.getAtomContainer());
     }
 
     /**
-     * Default constructor.
-     *
-     * AtomCount descriptor is initialized.
+     * Default constructor for MolWeightSimilarity class.
+     * 
+     * Descriptor is initialized.
      */
-    public AtomCountSimilarity() {
-	this.atomCountDescriptor = new AtomCountDescriptor();
+    public MolWeightSimilarity() {
+	this.molWeightDescriptor = new MolWeightDescriptor();
     }
 
     /**
-     * Setter for query compound in current similarity
-     *
-     * @param c Molecule implementing ICompound interface
-     * @throws CompoundSearchException
+     * Setter for request compound.
+     * 
+     * Molecular weight descriptor is performed over it.
+     * 
+     * @param c Requested compound from client
+     * @throws CompoundSearchException 
      */
     @Override
     public void setRequestCompound(ICompound c) throws CompoundSearchException {
 	this.requestCompound = c;
-	this.acdRequestResult = (Integer) this.atomCountDescriptor.calculate(this.requestCompound.getAtomContainer());
+	this.mwdRequestResult = (Double) this.molWeightDescriptor.calculate(this.requestCompound.getAtomContainer());
     }
 
     /**
-     * Similarity computation between given and request compound.
-     *
-     * Method compares atom counts of both molecules and return the ratio between
-     * them.
+     * Implementation of similarity calculation between two molecules using the 
+     * molecular weight descriptor.
      * 
-     * This method returns value between 0 and 1 where 0 marks no similarity by
-     * definition.
-     *
-     * @param c Molecule represented as AtomContainer from CDK library
-     * @return Double Computed similarity between two molecules
-     * @throws CompoundSearchException
+     * Descriptor values from both the request compound and given compound are 
+     * computed. Similarity is defined as the ratio of molecular weights
+     * 
+     * @param c Current compound from database
+     * @return Double Calculated similarity
+     * @throws CompoundSearchException 
      */
     @Override
     public Double calculateSimilarity(AtomContainer c) throws CompoundSearchException {
-	Integer requestAtoms = Integer.parseInt(this.acdRequestResult.toString());
-	Integer compoundFromDBAtoms = Integer.parseInt(this.atomCountDescriptor.calculate(c).toString());
+	Double requestMolWeight = Double.parseDouble(this.mwdRequestResult.toString());
+	Double currentMolWeight = Double.parseDouble(this.molWeightDescriptor.calculate(c).toString());
 
-	Double similarity = (double) Math.min(requestAtoms, compoundFromDBAtoms) / Math.max(requestAtoms, compoundFromDBAtoms);
+	Double similarity = (double) Math.min(requestMolWeight, currentMolWeight) / Math.max(requestMolWeight, currentMolWeight);
 
 	return similarity;
     }
@@ -93,27 +95,26 @@ public class AtomCountSimilarity extends AbstractSimilarity {
     public void setParameters(List<String> parameters) throws CompoundSearchException {
 
 	if (parameters.size() != 2) {
-	    throw new CompoundSearchException("AtomCountSimilarity requires 2 parameters");
+	    throw new CompoundSearchException("MolWeightSimilarity requires 2 parameters");
 	}
 
 	try {
 	    this.threshold = Double.parseDouble(parameters.get(0));
 	    if (this.threshold <= 0) {
-		throw new CompoundSearchException("AtomCountSimilarity threshold parameter cannot be less or equal to 0.");
+		throw new CompoundSearchException("MolWeightSimilarity threshold parameter cannot be less or equal to 0.");
 	    }
 	} catch (NumberFormatException e) {
-	    throw new CompoundSearchException("AtomCountSimilarity threshold parameter must be of type Double");
+	    throw new CompoundSearchException("MolWeightSimilarity threshold parameter must be of type Double");
 	}
-
+	
 	try {
-	    this.numberOfResults = Integer.parseInt(parameters.get(1));
+	    this.numberOfResults = Integer.parseInt(parameters.get(1));	
 	    if (this.numberOfResults <= 0) {
-		throw new CompoundSearchException("AtomCountSimilarity numberOfResults parameter cannot be less or equal to 0.");
+		throw new CompoundSearchException("MolWeightSimilarity numberOfResults parameter cannot be less or equal to 0.");
 	    }
 	} catch (NumberFormatException e) {
-	    throw new CompoundSearchException("AtomCountSimilarity numberOfResults parameter must be of type Integer");
+	     throw new CompoundSearchException("MolWeightSimilarity numberOfResults parameter must be of type Integer");
 	}
-
     }
 
     /**
@@ -191,14 +192,14 @@ public class AtomCountSimilarity extends AbstractSimilarity {
 	    // Must be set. 404 WebApplicationException is invoked and app stopped when empty result otherwise.
 	    lr.setCalledFromApp(true);
 	} catch (NamingException e) {
-	    throw new CompoundSearchException("Database error in AtomCountSimilarity. Cannot obtain REST resources.");
+	    throw new CompoundSearchException("Database error in MolWeightSimilarity. Cannot obtain REST resources.");
 	}
 
 	result = lr.getCompounds(limit, start);
 
 	return result;
     }
-
+    
     /**
      * Returns compound with a given id from database.
      * 
@@ -212,23 +213,23 @@ public class AtomCountSimilarity extends AbstractSimilarity {
      */
     @Override
     public ICompound getCompoundById(Long id) throws CompoundSearchException {
-	IdResource ir;
+	IdResource ir;		
 	List<Compound> irResult;
-
+	
 	try {
 	    Context context = new InitialContext();
 	    ir = (IdResource) context.lookup("java:module/IdResource");
 	    ir.setCalledFromApp(true);
 	} catch (NamingException e) {
-	    throw new CompoundSearchException("Database error in AtomCountSimilarity. Cannot obtain REST resources.");
-	}
-
+	    throw new CompoundSearchException("Database error in MolWeightSimilarity. Cannot obtain REST resources.");
+	}	
+	
 	irResult = ir.getCompoundById(id);
-
+	
 	if (irResult.isEmpty()) {
-	    throw new CompoundSearchException("Database error in AtomCountSimilarity. Cannot obtain compound with an ID " + id + ".");
+	    throw new CompoundSearchException("Database error in MolWeightSimilarity. Cannot obtain compound with an ID " + id + ".");
 	}
-
+	
 	return irResult.get(0);
     }
 }

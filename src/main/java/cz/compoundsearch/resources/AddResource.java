@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cz.compoundsearch.resources;
 
 import cz.compoundsearch.descriptor.SubstructureFingerprintDescriptor;
@@ -33,8 +29,14 @@ import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
 /**
+ * REST resource adding compound to the database.
  *
- * @author Chates
+ * Resource accepts both JSON and XML formats based on "Accept" header in HTTP
+ * request.
+ *
+ * <p><strong>This resource is mapped to /add/ URL</strong></p>
+ *
+ * @author Martin Mates
  */
 @Path("/add/")
 @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -47,47 +49,71 @@ public class AddResource {
     @Context
     private UriInfo uriInfo;
 
+    /**
+     * Adds a new compound to the database.
+     *
+     * This method accepts MDL molfile as a String and generates all required
+     * information such as SMILES line notation, substructure fingerprint and
+     * molecular formula.
+     *
+     * If there is any error during the processing of the MDL molfile response
+     * with status 500 (Internal server error) is returned and header 
+     * "Compound-search-error" is added to response explaining the error.
+     *
+     * <p><strong>This resource is mapped to /add/ URL</strong></p>
+     *
+     * @param requestXML JSON or XML request
+     * @return Response HTTP response containing new URI of the added compound
+     */
     @POST
     public Response addCompound(JAXBElement<AddRequest> requestXML) {
+	// We initialize empty Compound entity
 	Compound compoundToAdd = new Compound();
+	// Set MDL molfile of the Compound entity from HTTP request
 	compoundToAdd.setMolfile(requestXML.getValue().getMolfile());
 
-	// Compute SMILES and Molecular formula
 	try {
+	    // We create CDK Atom Container from MDL molfile String
 	    InputStream is = new ByteArrayInputStream(compoundToAdd.getMolfile().getBytes());
 	    MDLV2000Reader reader = new MDLV2000Reader(is);
 	    AtomContainer molecule = reader.read(new AtomContainer());
 	    is.close();
 	    reader.close();
 
-	    // Smiles
+	    // Generate SMILES line notation and add it to the Compound
 	    SmilesGenerator sg = new SmilesGenerator();
 	    compoundToAdd.setSmiles(sg.createSMILES(molecule));
 
-	    // Molecular formula
+	    // Generate molecular formula of the molecule and add it to the Compound
 	    MolecularFormula molForm = (MolecularFormula) MolecularFormulaManipulator.getMolecularFormula(molecule);
 	    compoundToAdd.setMolecularFormula(MolecularFormulaManipulator.getString(molForm));
 
 
-	    // Generate substructure fingerprint
+	    // We initialize empty SubstructureFingerprint entity for fingeprirnt persistation in the database.
 	    SubstructureFingerprint sf = new SubstructureFingerprint();
+	    // Generate structural key fingerprint
 	    SubstructureFingerprintDescriptor sfd = new SubstructureFingerprintDescriptor();
 	    BitSet idr;
 	    try {
+		// Use the SubstructureFingepritntDescriptor to generate fingerprint.
 		idr = sfd.calculate(compoundToAdd.getAtomContainer());
 	    } catch (CompoundSearchException e) {
-		throw new WebApplicationException(Response.status(500).entity("Adding new compound to database failed.").build());
+		CompoundResponse crf = new CompoundResponse("Adding new compound to database failed. Cannot calculate substructure fingerprint.", 500);
+		throw new WebApplicationException(crf.buildResponse());
 	    }
 	    sf.setCompound(compoundToAdd);
 	    sf.setFingerprint(idr);
 
+	    // Persist fingerprint and compound in the database
 	    em.persist(compoundToAdd);
 	    em.persist(sf);
 
 	} catch (Exception e) {
-	    throw new WebApplicationException(Response.serverError().build());
+	    CompoundResponse crf = new CompoundResponse("Adding new compound to database failed. MDL molfile may be malformed.", 500);
+	    throw new WebApplicationException(crf.buildResponse());
 	}
 
+	// Retun URI of the new compound
 	URI compoundUri = uriInfo.getBaseUriBuilder().path("/id/" + compoundToAdd.getId().toString()).build();
 	return Response.created(compoundUri).build();
 

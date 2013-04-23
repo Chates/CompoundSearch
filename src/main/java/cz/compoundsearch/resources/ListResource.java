@@ -49,7 +49,7 @@ public class ListResource {
     }
 
     /**
-     * Return all compounds from database.
+     * Returns all compounds from database.
      *
      * If database contains no compounds response with status 404 (Not found) is
      * returned and header "Compound-search-error" is added to response
@@ -76,6 +76,15 @@ public class ListResource {
 	return list;
     }
 
+    /**
+     * Returns number of compounds in database.
+     * 
+     * If database contains no compounds 0 is returned.
+     * 
+     * <p><strong>Method is mapped to /count/ URL.</strong></p>
+     * 
+     * @return SimilarityStatsResult Object containing number of compounds
+     */
     @GET
     @Path("/count/")
     public SimilarityStatsResult getCompoundCount() {
@@ -90,7 +99,7 @@ public class ListResource {
     }
 
     /**
-     * Return specified number of compounds from database.
+     * Returns specified number of compounds from database.
      *
      * If database contains no compounds response with status 404 (Not found) is
      * returned and header "Compound-search-error" is added to response
