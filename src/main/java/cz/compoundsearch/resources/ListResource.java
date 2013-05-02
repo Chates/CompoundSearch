@@ -186,6 +186,7 @@ public class ListResource {
 
 	return list;
     }
+    
 
     /**
      * Parameter to determine whether this resource is called from within an

@@ -200,8 +200,8 @@ public class SimilarityResource {
      * If there are no results or session has expired 404 HTTP status is 
      * returned.
      * 
-     * This method also validates given parameters. Maximum number of results to 
-     * return is limited to 1000 due to HTTP transfer overload.
+     * Maximum number of results to return is limited to 1000 due to HTTP 
+     * transfer overload.
      * 
      * <p><strong>Method is mapped to /similarity/{limit} URL.</strong></p>
      * 

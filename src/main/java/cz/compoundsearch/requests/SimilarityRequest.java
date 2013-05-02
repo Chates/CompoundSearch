@@ -71,7 +71,6 @@ public class SimilarityRequest {
     public void setSimilarity(String similarity) {
 	this.similarity = similarity;
     }
-    
-    
+      
     
 }

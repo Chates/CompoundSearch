@@ -25,7 +25,7 @@ import org.openscience.cdk.AtomContainer;
 @XmlRootElement
 @Table(name = "substructure_fingerprint")
 @Access(AccessType.PROPERTY)
-public class SubstructureFingerprint implements ICompound {
+public class SubstructureFingerprint implements ICompound, IFingerprint {
 
     private Long id;
     private BitSet fingerprint;
@@ -49,6 +49,7 @@ public class SubstructureFingerprint implements ICompound {
      * 
      * @param id ID of the compound in specific repository of database
      */
+    @Override
     public void setId(Long id) {
 	this.id = id;
     }
@@ -59,6 +60,7 @@ public class SubstructureFingerprint implements ICompound {
      * @return BitSet Structural fingerprint
      */
     @Column(name = "fingerprint")
+    @Override
     public BitSet getFingerprint() {
 	return fingerprint;
     }
@@ -68,6 +70,7 @@ public class SubstructureFingerprint implements ICompound {
      * 
      * @param fingerprint Structural fingerprint
      */
+    @Override
     public void setFingerprint(BitSet fingerprint) {
 	this.fingerprint = fingerprint;
     }
@@ -81,8 +84,22 @@ public class SubstructureFingerprint implements ICompound {
      */
     @OneToOne
     @JoinColumn(name = "compound_id", unique = true)
+    @Override
     public Compound getCompound() {
-	return compound;
+	return this.compound;
+    }
+    
+    /**
+     * Getter for molecule from which the fingerprint is calculated.
+     * 
+     * This is a mapping of table column to Compound entity as a foreign key.
+     * 
+     * @return Compound Molecule from which the fingerprint is calculated.
+     */
+    @OneToOne
+    @JoinColumn(name = "compound_id", unique = true)
+    public Compound getCompoundId() {
+	return this.compound.getId();
     }
 
     /**

@@ -21,7 +21,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBElement;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.formula.MolecularFormula;
@@ -36,7 +35,12 @@ import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
 /**
- *
+ * This resource is experimental only and serves as a simple SDF file parser.
+ * 
+ * For testing purposes programmer may want to import molecules into an existing 
+ * database. It can be done via this resource but name of the file has to be 
+ * accessible locally on the server and cannot be specified remotely or uploaded. 
+ * 
  * @author Martin Mates
  */
 @Path("/file/")
@@ -45,23 +49,38 @@ import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 @Stateless
 public class FileResource {
 
+    // Get persistence manager via dependency injection
     @PersistenceContext(unitName = "com.webtoad_Diplomka_maven_war_1.0PU")
     private EntityManager em;
 
+    /**
+     * Calling this resource initiates parsing of specified SDF molfile.
+     * 
+     * Programmer has to modify local variables filename, start and limit. Only
+     * limited number of molecules is processed because of the time required to
+     * compute all descriptors. Recommended maximum number of processed compounds
+     * in one run is 2000.
+     * 
+     * @return HTTP response
+     * @throws Exception
+     * @throws Throwable 
+     */
     @POST
-    @Path("/download/")
-    public Response readFile(JAXBElement<ChemFile> chemFileJSON) throws Exception, Throwable {
+    @Path("/process/")
+    public Response readFile() throws Exception, Throwable {
 
+	// Parameters to set
 	String filename = "/Users/Chates/Diplomka/Diplomka_maven/Compound_000000001_000025000.sdf";
+	int start = 7001;
+	int limit = 9000;
 
+	// Reading of the SDF file
 	File input = new File(filename);
-
 	BufferedReader br = new BufferedReader(new FileReader(input));
 	String sdfMolecule = "";
 	String sdfCurrentLine;
 
-	int counter = 0;
-	int start = 0;
+	int counter = 0;	
 	while ((sdfCurrentLine = br.readLine()) != null) {
 	    // $$$$ marks end of molecule in SDF files
 	    if (sdfCurrentLine.equals("$$$$")) {
@@ -71,7 +90,7 @@ public class FileResource {
 		    continue;
 		}
 		
-		if (counter > 4100) {
+		if (counter > limit) {
 		    break;
 		}
 
@@ -137,6 +156,7 @@ public class FileResource {
 			    SubstructureFingerprint sf = new SubstructureFingerprint();
 			    SubstructureFingerprintDescriptor sfd = new SubstructureFingerprintDescriptor();
 			    BitSet idr;
+
 			    try {								
 				idr = sfd.calculate(c.getAtomContainer());
 			    } catch (CompoundSearchException e) {
@@ -160,9 +180,6 @@ public class FileResource {
 		sdfMolecule += sdfCurrentLine + "\n";
 	    }
 	}
-
-
-
 
 	return Response.ok().build();
     }

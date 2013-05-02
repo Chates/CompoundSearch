@@ -55,6 +55,9 @@ public class AddResource {
      * This method accepts MDL molfile as a String and generates all required
      * information such as SMILES line notation, substructure fingerprint and
      * molecular formula.
+     * 
+     * When compound is added successfully HTTP status 201 (Created) and 
+     * link to new resource is returned.
      *
      * If there is any error during the processing of the MDL molfile response
      * with status 500 (Internal server error) is returned and header 
