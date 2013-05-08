@@ -71,8 +71,8 @@ public class FileResource {
 
 	// Parameters to set
 	String filename = "/Users/Chates/Diplomka/Diplomka_maven/Compound_000000001_000025000.sdf";
-	int start = 7001;
-	int limit = 9000;
+	int start = 17501;
+	int limit = 20010;
 
 	// Reading of the SDF file
 	File input = new File(filename);

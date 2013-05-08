@@ -126,8 +126,14 @@ public class SimilarityResource {
 	    List<String> params = sr.getValue().getParameters();
 	    String requestedSimilarity = sr.getValue().getSimilarity();
 	    Compound requestCompound = new Compound(sr.getValue().getMolfile());
+	    
+	    // Validate request compound
+	    if (requestCompound.getAtomContainer().getAtomCount() == 0) {
+		CompoundResponse cr = new CompoundResponse("Query compound is empty or malformed.", 500);
+		throw new WebApplicationException(cr.buildResponse());
+	    }
 
-	    // Get all similarities vie reflection
+	    // Get all similarities via reflection
 	    Set<ISimilarity> similarities = this.getSimilaritiesReflection();
 
 	    // Find requested similarity in set 

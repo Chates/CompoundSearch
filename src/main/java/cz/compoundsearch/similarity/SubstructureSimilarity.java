@@ -89,42 +89,42 @@ public class SubstructureSimilarity extends AbstractSimilarity {
      * @throws CompoundSearchException
      * @throws NoMoreCompoundsException
      */
-//    @Override
-//    public List<Compound> screen(Integer start, Integer limit) throws CompoundSearchException, NoMoreCompoundsException {
-//	// Result of the screening
-//	List<Compound> screeningResult = new ArrayList<Compound>();
-//
-//	// Fingerprint of requested compound
-//	SubstructureFingerprintDescriptor sfd = new SubstructureFingerprintDescriptor();
-//	BitSet reqCompFingerprint = (BitSet) sfd.calculate(this.requestCompound.getAtomContainer());
-//
-//	// Selected fingeprints from DB
-//	List<? extends IFingerprint> sfResult;
-//	sfResult = this.getCompounds(start, limit);
-//
-//	// Result empty. No more compounds in database throw exception
-//	if (sfResult.isEmpty()) {
-//	    throw new NoMoreCompoundsException();
-//	}
-//
-//
-//	// For each Compound perform screening
-//	for (IFingerprint sf : sfResult) {
-//	    BitSet curCompFingerprint = sf.getFingerprint();
-//	    BitSet reqCompFingerprintClone = (BitSet) reqCompFingerprint.clone();
-//
-//	    // Perform logical AND to currentCompound
-//	    reqCompFingerprintClone.and(curCompFingerprint);
-//
-//	    // All bits in requested compound has to be in current compound
-//	    if (reqCompFingerprint.equals(reqCompFingerprintClone)) {
-//		screeningResult.add(sf.getCompound()); // May be substructure
-//	    }
-//	}
-//
-//	return screeningResult;
-//
-//    }
+    @Override
+    public List<Compound> screen(Integer start, Integer limit) throws CompoundSearchException, NoMoreCompoundsException {
+	// Result of the screening
+	List<Compound> screeningResult = new ArrayList<Compound>();
+
+	// Fingerprint of requested compound
+	SubstructureFingerprintDescriptor sfd = new SubstructureFingerprintDescriptor();
+	BitSet reqCompFingerprint = (BitSet) sfd.calculate(this.requestCompound.getAtomContainer());
+
+	// Selected fingeprints from DB
+	List<? extends IFingerprint> sfResult;
+	sfResult = this.getCompounds(start, limit);
+
+	// Result empty. No more compounds in database throw exception
+	if (sfResult.isEmpty()) {
+	    throw new NoMoreCompoundsException();
+	}
+
+
+	// For each Compound perform screening
+	for (IFingerprint sf : sfResult) {
+	    BitSet curCompFingerprint = sf.getFingerprint();
+	    BitSet reqCompFingerprintClone = (BitSet) reqCompFingerprint.clone();
+
+	    // Perform logical AND to currentCompound
+	    reqCompFingerprintClone.and(curCompFingerprint);
+
+	    // All bits in requested compound has to be in current compound
+	    if (reqCompFingerprint.equals(reqCompFingerprintClone)) {
+		screeningResult.add(sf.getCompound()); // May be substructure
+	    }
+	}
+
+	return screeningResult;
+
+    }
 
     /**
      * This is a setter for similarity parameters and place where parameter

@@ -58,8 +58,12 @@ public class Compound implements ICompound {
      *
      * @return Long ID of the compound in specific repository or database
      */
-    @Override
     public Long getId() {
+	return id;
+    }
+    
+    @Override
+    public Long getCompoundId() {
 	return id;
     }
 
@@ -68,7 +72,6 @@ public class Compound implements ICompound {
      * 
      * @param id ID of the compound in specific repository of database
      */
-    @Override
     public void setId(Long id) {
 	this.id = id;
     }

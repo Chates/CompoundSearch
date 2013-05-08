@@ -23,18 +23,17 @@ public interface ICompound {
      */
     public AtomContainer getAtomContainer() throws CompoundSearchException;
     
+    
     /**
      * Getter for compound ID.
      * 
+     * Every database entity extending this interface has to be able to return 
+     * compound ID. Useful especially with descriptor entities that belong to 
+     * specific compound.
+     * 
      * @return Long ID of the compound in specific repository or database 
      */
-    public Long getId();
-    
-    /**
-     * Setter for compound ID.
-     * 
-     * @param id ID of the compound in specific repository of database
-     */
-    public void setId(Long id);
+    public Long getCompoundId();
+   
     
 }

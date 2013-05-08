@@ -86,6 +86,9 @@ public class AddResource {
 	    // Generate SMILES line notation and add it to the Compound
 	    SmilesGenerator sg = new SmilesGenerator();
 	    compoundToAdd.setSmiles(sg.createSMILES(molecule));
+	    if (compoundToAdd.getSmiles().equals("")) {
+		throw new WebApplicationException();
+	    }
 
 	    // Generate molecular formula of the molecule and add it to the Compound
 	    MolecularFormula molForm = (MolecularFormula) MolecularFormulaManipulator.getMolecularFormula(molecule);
@@ -117,7 +120,7 @@ public class AddResource {
 	}
 
 	// Retun URI of the new compound
-	URI compoundUri = uriInfo.getBaseUriBuilder().path("/id/" + compoundToAdd.getId().toString()).build();
+	URI compoundUri = uriInfo.getBaseUriBuilder().path("/id/" + compoundToAdd.getCompoundId().toString()).build();
 	return Response.created(compoundUri).build();
 
     }

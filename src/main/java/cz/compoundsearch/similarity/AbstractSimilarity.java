@@ -60,9 +60,10 @@ public abstract class AbstractSimilarity implements ISimilarity {
 		currentSimilarity = calculateSimilarity(c.getAtomContainer());
 		// Is similrity over the requested treshold?
 		if (currentSimilarity >= this.threshold) {
-		    similarCompounds.add(new SimilarityResult(c.getId(), currentSimilarity));
+		    similarCompounds.add(new SimilarityResult(c.getCompoundId(), currentSimilarity));
 		}
 	    }
+	    result.clear();
 
 	    // Sort results by similarity
 	    Collections.sort(similarCompounds);
@@ -77,7 +78,8 @@ public abstract class AbstractSimilarity implements ISimilarity {
 		}
 
 		// Cut sorted list to requested size. Saving memory keeping only best results
-		similarCompounds = similarCompounds.subList(0, this.numberOfResults);
+		//similarCompounds = similarCompounds.subList(0, this.numberOfResults);
+		similarCompounds = new ArrayList<SimilarityResult>(similarCompounds.subList(0, this.numberOfResults));
 	    }
 
 	    start += this.batchSize;

@@ -39,7 +39,6 @@ public class SubstructureFingerprint implements ICompound, IFingerprint {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
-    @Override
     public Long getId() {
 	return id;
     }
@@ -49,7 +48,6 @@ public class SubstructureFingerprint implements ICompound, IFingerprint {
      * 
      * @param id ID of the compound in specific repository of database
      */
-    @Override
     public void setId(Long id) {
 	this.id = id;
     }
@@ -90,16 +88,13 @@ public class SubstructureFingerprint implements ICompound, IFingerprint {
     }
     
     /**
-     * Getter for molecule from which the fingerprint is calculated.
+     * Getter for molecule ID from which the fingerprint is calculated.
      * 
-     * This is a mapping of table column to Compound entity as a foreign key.
-     * 
-     * @return Compound Molecule from which the fingerprint is calculated.
+     * @return Long ID of molecule from which the fingerprint is calculated.
      */
-    @OneToOne
-    @JoinColumn(name = "compound_id", unique = true)
-    public Compound getCompoundId() {
-	return this.compound.getId();
+    @Override
+    public Long getCompoundId() {
+	return this.getCompound().getCompoundId();
     }
 
     /**
